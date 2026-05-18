@@ -1,0 +1,27 @@
+# Environment variables (contains Firebase API keys)
+.env.local
+.env.*.local
+.env
+serviceAccountKey.json
+
+# Dependencies
+node_modules/
+from Figma/node_modules/
+
+# Build output
+dist/
+build/
+
+# Python
+__pycache__/
+*.pyc
+*.pth
+backend/best_model.pth
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

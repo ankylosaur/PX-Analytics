@@ -1,0 +1,50 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper: Get the authenticated user's role from their profile ──
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function getProviderId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.provider_id;
+    }
+
+    function isAdmin() {
+      return request.auth != null && getUserRole() == "admin";
+    }
+
+    function isProvider() {
+      return request.auth != null && getUserRole() == "provider";
+    }
+
+    // ── Users collection ──
+    // Users can read their own profile. Admins can read all.
+    match /users/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false; // No self-deletion
+    }
+
+    // ── Providers collection ──
+    // Admins can read all providers. Providers can read their own linked profile.
+    match /providers/{providerId} {
+      allow read: if request.auth != null && (isAdmin() || getProviderId() == providerId);
+      allow write: if isAdmin();
+    }
+
+    // ── Consultations collection ──
+    // Admins can read all consultations.
+    // Providers can only read consultations where provider_id matches their own.
+    // Only admins (or backend service accounts) can write consultations.
+    match /consultations/{consultationId} {
+      allow read: if request.auth != null &&
+        (isAdmin() || (isProvider() && resource.data.provider_id == getProviderId()));
+      allow create: if request.auth != null && isAdmin();
+      allow update, delete: if false; // Consultations are immutable event logs
+    }
+  }
+}
