@@ -17,7 +17,7 @@ function figmaAssetResolver() {
 }
 
 export default defineConfig({
-  // Read .env.local from the project root (one level up from this Vite app)
+  // Locally: read .env.local from parent dir. On Vercel: env vars are injected into process.env directly.
   envDir: path.resolve(__dirname, '..'),
   plugins: [
     figmaAssetResolver(),
