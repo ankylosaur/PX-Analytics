@@ -181,6 +181,38 @@ async function seedConsultations() {
   console.log(`\n[seed] Total consultations written: ${totalWritten}`);
 }
 
+// ─── Delete Collection Helper ───
+
+async function deleteCollection(collectionName) {
+  console.log(`[clear] Deleting all documents in collection: ${collectionName}...`);
+  const collectionRef = db.collection(collectionName);
+  const snapshot = await collectionRef.get();
+  
+  if (snapshot.empty) {
+    console.log(`  [clear] Collection "${collectionName}" is already empty.`);
+    return;
+  }
+  
+  let batch = db.batch();
+  let count = 0;
+  
+  for (const doc of snapshot.docs) {
+    batch.delete(doc.ref);
+    count++;
+    
+    if (count >= 400) {
+      await batch.commit();
+      batch = db.batch();
+      count = 0;
+    }
+  }
+  
+  if (count > 0) {
+    await batch.commit();
+  }
+  console.log(`  [clear] Deleted all ${snapshot.docs.length} documents in "${collectionName}".\n`);
+}
+
 // ─── Main ───
 
 async function main() {
@@ -189,10 +221,14 @@ async function main() {
   console.log("=".repeat(55));
 
   try {
+    // Clear collections first
+    await deleteCollection("providers");
+    await deleteCollection("consultations");
+
     await seedProviders();
     await seedConsultations();
 
-    console.log("\n[seed] DONE. Your dashboard should now show rich data.");
+    console.log("\n[seed] DONE. Your database has been cleared and re-seeded with fresh data.");
     console.log("[seed] Refresh the Vite frontend to see the charts populate.\n");
   } catch (err) {
     console.error("\n[seed] ERROR:", err.message);
