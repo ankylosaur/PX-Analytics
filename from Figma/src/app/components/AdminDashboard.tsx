@@ -90,15 +90,10 @@ export default function AdminDashboard() {
 
   return (
     <main className="flex-1 overflow-y-auto px-8 py-8 space-y-8 max-w-7xl mx-auto w-full">
-      {/* ─── Page Title / Subtitle ─── */}
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-          Admin Command Center
-        </h1>
-        <p className="text-xs font-semibold text-slate-400 leading-normal">
-          Monitor and analyze post-discharge patient feedback transcripts, AI summaries, and sentiment metrics in real time.
-        </p>
-      </div>
+      {/* ─── Page Title ─── */}
+      <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+        Admin Command Center
+      </h1>
 
       {/* ─── Error Alert ─── */}
       {error && (
