@@ -48,7 +48,13 @@ function truncate(text, maxLen = 80) {
   return text.length > maxLen ? text.slice(0, maxLen) + "…" : text;
 }
 
-export default function FeedbackTable({ feedbacks, loading, onSelectFeedback }) {
+export default function FeedbackTable({
+  feedbacks,
+  loading,
+  onSelectFeedback,
+  onSelectDoctor,
+  onSelectPatient,
+}) {
   const [currentPage, setCurrentPage] = useState(0);
 
   // Reset to page 0 when feedbacks change
@@ -67,11 +73,11 @@ export default function FeedbackTable({ feedbacks, loading, onSelectFeedback }) 
   // ─── Loading Skeleton View ───
   if (loading) {
     return (
-      <div className="rounded-xl border border-slate-200/80 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-slate-200/80 bg-white shadow-sm overflow-hidden overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 border-b border-slate-200">
-              <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider pl-6 h-11">Date</TableHead>
+              <TableHead className="sticky left-0 bg-slate-50/55 text-xs font-semibold text-slate-500 uppercase tracking-wider pl-6 h-11 z-20 border-r border-slate-100 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">Date</TableHead>
               <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider h-11">Patient</TableHead>
               <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider h-11">Doctor</TableHead>
               <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider h-11">Dept</TableHead>
@@ -81,8 +87,10 @@ export default function FeedbackTable({ feedbacks, loading, onSelectFeedback }) 
           </TableHeader>
           <TableBody>
             {Array.from({ length: PAGE_SIZE }).map((_, i) => (
-              <TableRow key={i} className="border-b border-slate-100 hover:bg-transparent">
-                <TableCell className="pl-6 py-4"><Skeleton className="h-4 w-20 bg-slate-100/70 animate-pulse rounded" /></TableCell>
+              <TableRow key={i} className="group border-b border-slate-100 hover:bg-transparent">
+                <TableCell className="sticky left-0 bg-white group-hover:bg-white pl-6 py-4 z-10 border-r border-slate-100 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
+                  <Skeleton className="h-4 w-20 bg-slate-100/70 animate-pulse rounded" />
+                </TableCell>
                 <TableCell className="py-4"><Skeleton className="h-4 w-28 bg-slate-100/70 animate-pulse rounded" /></TableCell>
                 <TableCell className="py-4"><Skeleton className="h-4 w-24 bg-slate-100/70 animate-pulse rounded" /></TableCell>
                 <TableCell className="py-4"><Skeleton className="h-4 w-20 bg-slate-100/70 animate-pulse rounded" /></TableCell>
@@ -119,12 +127,12 @@ export default function FeedbackTable({ feedbacks, loading, onSelectFeedback }) 
 
   return (
     <div className="rounded-xl border border-slate-200/80 bg-white shadow-sm overflow-hidden flex flex-col">
-      {/* Scrollable container for sticky header support */}
-      <div className="max-h-[520px] overflow-y-auto relative">
+      {/* Scrollable container for sticky header & sticky column support */}
+      <div className="max-h-[520px] overflow-auto relative">
         <Table>
-          <TableHeader className="sticky top-0 bg-slate-50/95 backdrop-blur-sm z-10 border-b border-slate-200 shadow-sm/5">
+          <TableHeader className="sticky top-0 bg-slate-50/95 backdrop-blur-sm z-20 border-b border-slate-200 shadow-sm/5">
             <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 border-b-0">
-              <TableHead className="sticky top-0 bg-slate-50/95 backdrop-blur-sm text-xs font-semibold text-slate-500 uppercase tracking-wider pl-6 h-11">
+              <TableHead className="sticky top-0 left-0 bg-slate-50/95 backdrop-blur-sm text-xs font-semibold text-slate-500 uppercase tracking-wider pl-6 h-11 z-30 border-r border-slate-100 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
                 Date
               </TableHead>
               <TableHead className="sticky top-0 bg-slate-50/95 backdrop-blur-sm text-xs font-semibold text-slate-500 uppercase tracking-wider h-11">
@@ -148,17 +156,41 @@ export default function FeedbackTable({ feedbacks, loading, onSelectFeedback }) 
             {paginatedFeedbacks.map((fb) => (
               <TableRow
                 key={fb.id}
-                className="cursor-pointer hover:bg-slate-50/80 border-b border-slate-100 transition-colors duration-150"
+                className="group cursor-pointer hover:bg-slate-50/80 border-b border-slate-100 transition-colors duration-150"
                 onClick={() => onSelectFeedback(fb)}
               >
-                <TableCell className="pl-6 text-xs text-slate-600 font-semibold py-3.5">
+                <TableCell className="sticky left-0 bg-white group-hover:bg-slate-50/80 text-xs text-slate-600 font-semibold py-3.5 pl-6 border-r border-slate-100 z-10 transition-colors shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
                   {formatDate(fb.timestamp)}
                 </TableCell>
                 <TableCell className="text-xs text-slate-900 font-semibold py-3.5">
-                  {fb.patient_name || "—"}
+                  {fb.patient_name ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectPatient?.(fb.patient_name);
+                      }}
+                      className="text-slate-900 font-medium cursor-pointer transition-colors duration-200 hover:text-indigo-600 text-left focus:outline-hidden"
+                    >
+                      {fb.patient_name}
+                    </button>
+                  ) : (
+                    "—"
+                  )}
                 </TableCell>
                 <TableCell className="text-xs text-slate-600 font-medium py-3.5">
-                  {fb.doctor_id || "—"}
+                  {fb.doctor_id ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectDoctor?.(fb.doctor_id);
+                      }}
+                      className="text-slate-900 font-medium cursor-pointer transition-colors duration-200 hover:text-indigo-600 text-left focus:outline-hidden"
+                    >
+                      {fb.doctor_id}
+                    </button>
+                  ) : (
+                    "—"
+                  )}
                 </TableCell>
                 <TableCell className="text-xs text-slate-600 font-medium py-3.5">
                   {fb.department || "—"}

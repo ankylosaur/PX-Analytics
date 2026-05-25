@@ -4,16 +4,22 @@
  * Coordinates filters, feeds data via useFeedbackData, and renders the subcomponents:
  *   - KPIBar (stats, sentiment breakdown, trending pain points)
  *   - FilterBar (dropdowns for department, doctor, sentiment, patient search, and date range)
- *   - FeedbackTable (data grid with sentiment pill badges)
+ *   - SentimentTrendChart (time-series stacked area chart of sentiment volume)
+ *   - FeedbackTable (data grid with sentiment pill badges and clickable entity links)
  *   - FeedbackDetailPanel (slide-out sheet showing full transcripts and details)
+ *   - DoctorProfileModal (deep dive clinical stats and pain points for a provider)
+ *   - PatientProfileModal (vertical milestone timeline of patient's touchpoints)
  */
 
 import { useState } from "react";
 import { useFeedbackData } from "../../hooks/useFeedbackData";
 import KPIBar from "./KPIBar";
 import FilterBar from "./FilterBar";
+import SentimentTrendChart from "./SentimentTrendChart";
 import FeedbackTable from "./FeedbackTable";
 import FeedbackDetailPanel from "./FeedbackDetailPanel";
+import DoctorProfileModal from "./DoctorProfileModal";
+import PatientProfileModal from "./PatientProfileModal";
 import { AlertCircle } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -28,6 +34,12 @@ export default function AdminDashboard() {
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
+  // ─── Selected Entity Deep Dive States ───
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [isDoctorOpen, setIsDoctorOpen] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [isPatientOpen, setIsPatientOpen] = useState(false);
+
   // ─── Fetch Data ───
   const filters = {
     searchQuery,
@@ -40,6 +52,7 @@ export default function AdminDashboard() {
 
   const {
     feedbacks,
+    allFeedbacks,
     loading,
     error,
     sentimentBreakdown,
@@ -61,6 +74,18 @@ export default function AdminDashboard() {
   const handleCloseDetail = () => {
     setIsDetailOpen(false);
     // Keep selectedFeedback populated briefly to avoid blank sheet during close animation
+  };
+
+  const handleSelectDoctor = (doctorId) => {
+    setSelectedDoctor(doctorId);
+    setIsDoctorOpen(true);
+    setIsPatientOpen(false); // Close patient modal to prevent overlapping Dialogs
+  };
+
+  const handleSelectPatient = (patientName) => {
+    setSelectedPatient(patientName);
+    setIsPatientOpen(true);
+    setIsDoctorOpen(false); // Close doctor modal to prevent overlapping Dialogs
   };
 
   return (
@@ -114,11 +139,20 @@ export default function AdminDashboard() {
         doctors={uniqueDoctors}
       />
 
+      {/* ─── Sentiment Volume Trends Chart ─── */}
+      <SentimentTrendChart
+        feedbacks={feedbacks}
+        dateRange={dateRange}
+        loading={loading}
+      />
+
       {/* ─── Data Grid Table ─── */}
       <FeedbackTable
         feedbacks={feedbacks}
         loading={loading}
         onSelectFeedback={handleSelectFeedback}
+        onSelectDoctor={handleSelectDoctor}
+        onSelectPatient={handleSelectPatient}
       />
 
       {/* ─── Detail Sheet Panel ─── */}
@@ -127,6 +161,24 @@ export default function AdminDashboard() {
         open={isDetailOpen}
         onClose={handleCloseDetail}
       />
+
+      {/* ─── Doctor Deep Dive Modal ─── */}
+      <DoctorProfileModal
+        doctorId={selectedDoctor}
+        feedbacks={allFeedbacks}
+        open={isDoctorOpen}
+        onClose={() => setIsDoctorOpen(false)}
+      />
+
+      {/* ─── Patient Journey Modal ─── */}
+      <PatientProfileModal
+        patientName={selectedPatient}
+        feedbacks={allFeedbacks}
+        open={isPatientOpen}
+        onClose={() => setIsPatientOpen(false)}
+        onSelectDoctor={handleSelectDoctor}
+      />
     </main>
   );
 }
+

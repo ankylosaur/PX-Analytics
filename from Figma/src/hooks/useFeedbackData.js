@@ -212,6 +212,7 @@ export function useFeedbackData(filters = {}) {
 
   return {
     feedbacks: filteredFeedbacks,
+    allFeedbacks,
     loading,
     error,
     sentimentBreakdown,
