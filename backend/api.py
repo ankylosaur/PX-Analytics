@@ -1,225 +1,354 @@
 """
-api.py — FastAPI server for the Acoustic Sentiment Engine
-POST /analyze-audio accepts a .wav upload and returns Empathy, Clarity,
-and Efficiency scores (0–100) by running the trained EmotionCNN and
-applying a heuristic mapping layer.
+PX Analytics — Feedback Processing Engine
+==========================================
+
+Production-ready FastAPI server that processes patient audio feedback
+through a three-stage pipeline:
+
+    1. **Speech-to-Text (STT):** OpenAI Whisper API transcribes audio.
+    2. **LLM Analysis:** GPT-4o extracts sentiment, summary, and pain points.
+    3. **Persistence:** Results are stored in Google Cloud Firestore.
+
+Version: 2.0.0
 """
 
-import io
-import os
-import numpy as np
-import torch
-import torch.nn.functional as F
-import librosa
+from __future__ import annotations
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
+import json
+import logging
+import os
+from typing import Any, Dict
+from uuid import uuid4
+
+from dotenv import load_dotenv
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
-from model import EmotionCNN
-from dataset import SAMPLE_RATE, DURATION_SEC, N_MFCC, FIXED_LENGTH
+# ---------------------------------------------------------------------------
+# Environment & Logging
+# ---------------------------------------------------------------------------
 
+load_dotenv()
 
-# ─── App setup ───
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+)
+logger = logging.getLogger("px-analytics")
+
+# ---------------------------------------------------------------------------
+# OpenAI Client Initialisation
+# ---------------------------------------------------------------------------
+
+OPENAI_API_KEY: str | None = os.getenv("OPENAI_API_KEY")
+
+openai_client = None
+if OPENAI_API_KEY:
+    from openai import OpenAI
+
+    openai_client = OpenAI(api_key=OPENAI_API_KEY)
+    logger.info("OpenAI client initialised successfully.")
+else:
+    logger.warning(
+        "OPENAI_API_KEY is not set. Whisper and LLM endpoints will be unavailable."
+    )
+
+# ---------------------------------------------------------------------------
+# Firebase Admin SDK Initialisation
+# ---------------------------------------------------------------------------
+
+FIREBASE_SERVICE_ACCOUNT_PATH: str | None = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH")
+
+db = None
+if FIREBASE_SERVICE_ACCOUNT_PATH:
+    try:
+        import firebase_admin
+        from firebase_admin import credentials, firestore
+
+        cred = credentials.Certificate(FIREBASE_SERVICE_ACCOUNT_PATH)
+        firebase_admin.initialize_app(cred)
+        db = firestore.client()
+        logger.info("Firebase Admin SDK initialised — Firestore client ready.")
+    except Exception:
+        logger.exception("Failed to initialise Firebase Admin SDK.")
+else:
+    logger.warning(
+        "FIREBASE_SERVICE_ACCOUNT_PATH is not set. Firestore persistence will be unavailable."
+    )
+
+# ---------------------------------------------------------------------------
+# FastAPI Application
+# ---------------------------------------------------------------------------
+
 app = FastAPI(
-    title="Ambient PX — Acoustic Sentiment Engine",
-    version="1.0.0",
-    description="Phase 1: Emotion classification → Business metric translation",
+    title="PX Analytics — Feedback Processing Engine",
+    version="2.0.0",
+    description=(
+        "Processes patient audio feedback through Whisper STT, GPT-4o analysis, "
+        "and persists structured results to Firestore."
+    ),
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Dev mode — tighten for production
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ─── Load trained model at startup ───
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "best_model.pth")
-device = torch.device("cpu")  # inference on CPU for simplicity
-model = EmotionCNN(n_classes=8, in_channels=41)
+# ---------------------------------------------------------------------------
+# System prompt used for GPT-4o feedback analysis
+# ---------------------------------------------------------------------------
 
-if os.path.exists(MODEL_PATH):
-    model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
-    print(f"[api] Loaded model weights from {MODEL_PATH}")
-else:
-    print(f"[api] WARNING: {MODEL_PATH} not found — model is untrained!")
+_ANALYSIS_SYSTEM_PROMPT: str = (
+    "You are a medical feedback analyst. Analyze the following patient feedback "
+    "transcript. Return a JSON object with exactly three keys: "
+    "'sentiment' (strictly one of: 'Positive', 'Neutral', or 'Negative'), "
+    "'summary' (2-3 concise sentences summarizing the feedback), and "
+    "'pain_points' (an array of short strings representing specific complaints "
+    "or issues mentioned, empty array if none)."
+)
 
-model.to(device)
-model.eval()
-
-# ─── Emotion index mapping (0-indexed) ───
-# 0=neutral, 1=calm, 2=happy, 3=sad, 4=angry, 5=fearful, 6=disgust, 7=surprised
-EMOTION_NAMES = [
-    "neutral", "calm", "happy", "sad",
-    "angry", "fearful", "disgust", "surprised",
-]
+# Allowed audio extensions for upload
+_ALLOWED_EXTENSIONS: set[str] = {".wav", ".mp3"}
 
 
-def extract_features_from_bytes(audio_bytes: bytes) -> tuple[torch.Tensor, float]:
-    """
-    Process raw .wav bytes into model-ready features.
-
-    Returns:
-        features: torch.FloatTensor of shape (1, 41, FIXED_LENGTH)
-        zcr_mean: float — mean zero-crossing rate of the clip
-    """
-    # Load audio from in-memory bytes
-    y, sr = librosa.load(io.BytesIO(audio_bytes), sr=SAMPLE_RATE, mono=True)
-
-    # Pad or truncate to fixed duration
-    target_len = SAMPLE_RATE * DURATION_SEC
-    if len(y) < target_len:
-        y = np.pad(y, (0, target_len - len(y)), mode="constant")
-    else:
-        y = y[:target_len]
-
-    # Extract MFCCs (40, T) and ZCR (1, T)
-    mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=N_MFCC)
-    zcr = librosa.feature.zero_crossing_rate(y=y)
-    zcr_mean = float(np.mean(zcr))
-
-    # Stack → (41, T), pad/truncate to FIXED_LENGTH
-    features = np.vstack([mfccs, zcr])
-    if features.shape[1] < FIXED_LENGTH:
-        pad_w = FIXED_LENGTH - features.shape[1]
-        features = np.pad(features, ((0, 0), (0, pad_w)), mode="constant")
-    else:
-        features = features[:, :FIXED_LENGTH]
-
-    tensor = torch.from_numpy(features.astype(np.float32)).unsqueeze(0)  # (1, 41, T)
-    return tensor, zcr_mean
+# ---------------------------------------------------------------------------
+# Endpoints
+# ---------------------------------------------------------------------------
 
 
-def compute_business_metrics(
-    probs: np.ndarray,
-    zcr_mean: float,
-) -> dict[str, int]:
-    """
-    Heuristic mapping layer: translate raw emotion probabilities + ZCR
-    into Empathy, Clarity, and Efficiency scores (0–100).
-
-    Args:
-        probs: np.ndarray of shape (8,) — softmax probabilities for each emotion.
-               Index: 0=neutral, 1=calm, 2=happy, 3=sad,
-                      4=angry, 5=fearful, 6=disgust, 7=surprised
-        zcr_mean: float — mean zero-crossing rate of the audio clip.
-
-    Returns:
-        dict with keys "Empathy", "Clarity", "Efficiency", each int 0–100.
-    """
-
-    p_neutral, p_calm, p_happy, p_sad = probs[0], probs[1], probs[2], probs[3]
-    p_angry, p_fearful, p_disgust, p_surprised = probs[4], probs[5], probs[6], probs[7]
-
-    # ── Empathy (0–100) ──
-    # Heavily boosted by calm + happy, penalized by angry + fearful
-    empathy_raw = (
-        50                              # baseline
-        + 30 * (p_calm + p_happy)       # positive contributors (max +30)
-        + 10 * p_neutral                # neutral is mildly positive
-        + 5 * p_surprised               # surprise can indicate engagement
-        - 35 * p_angry                  # strong penalty
-        - 25 * p_fearful               # fearful tone erodes empathy
-        - 15 * p_disgust               # disgust is negative
-        - 10 * p_sad                   # sadness slightly negative
-    )
-    empathy = int(np.clip(empathy_raw, 0, 100))
-
-    # ── Clarity (0–100) ──
-    # Derived from Zero-Crossing Rate. Moderate, steady ZCR → high clarity.
-    # Typical speech ZCR ranges roughly 0.03–0.12.
-    # Sweet spot: ~0.04–0.08 → high scores (80–100)
-    # Too high (>0.10): rushed/frantic → penalized
-    # Too low (<0.03): mumbling → penalized
-    zcr_center = 0.06    # ideal ZCR midpoint
-    zcr_sigma = 0.025    # controls width of the "good" band
-
-    # Gaussian-shaped mapping: peaks at zcr_center
-    zcr_deviation = (zcr_mean - zcr_center) / zcr_sigma
-    clarity_from_zcr = 95 * np.exp(-0.5 * zcr_deviation ** 2)
-
-    # Slight emotional adjustment: angry/fearful speech tends to be less clear
-    clarity_emotion_penalty = 10 * (p_angry + p_fearful) + 5 * p_disgust
-    clarity_raw = clarity_from_zcr - clarity_emotion_penalty + 5  # small baseline boost
-    clarity = int(np.clip(clarity_raw, 0, 100))
-
-    # ── Efficiency (0–100) ──
-    # Composite: inversely related to negative emotions, boosted by steady tempo
-    negative_load = p_angry + p_fearful + p_disgust + p_sad
-    positive_load = p_calm + p_neutral + p_happy
-
-    efficiency_raw = (
-        55                                  # baseline
-        + 25 * positive_load                # calm, neutral, happy → efficient
-        - 40 * negative_load                # frustration/anger kills efficiency
-        + 15 * (1.0 - abs(zcr_deviation))   # steady tempo bonus (capped by deviation)
-        + 5 * p_surprised                   # mild positive (engagement)
-    )
-    efficiency = int(np.clip(efficiency_raw, 0, 100))
-
+@app.get("/health", tags=["Ops"])
+async def health_check() -> Dict[str, Any]:
+    """Return service health status including readiness of Whisper and LLM."""
     return {
-        "Empathy": empathy,
-        "Clarity": clarity,
-        "Efficiency": efficiency,
+        "status": "ok",
+        "whisper_ready": openai_client is not None,
+        "llm_ready": openai_client is not None,
     }
 
 
-# ─── API Endpoints ───
+@app.post("/process-feedback", status_code=201, tags=["Feedback"])
+async def process_feedback(
+    file: UploadFile = File(..., description="Patient audio file (.wav or .mp3)"),
+    patient_name: str = Form(..., description="Name of the patient"),
+    doctor_id: str = Form(..., description="Identifier for the attending doctor"),
+    department: str = Form(..., description="Hospital department"),
+) -> Dict[str, Any]:
+    """Process an audio feedback file through the full STT → LLM → Firestore pipeline.
 
-@app.get("/health")
-def health_check():
-    """Simple health check."""
-    model_loaded = os.path.exists(MODEL_PATH)
-    return {"status": "ok", "model_loaded": model_loaded}
+    **Pipeline stages:**
 
-
-@app.post("/analyze-audio")
-async def analyze_audio(file: UploadFile = File(...)):
+    1. Validate the uploaded file extension.
+    2. Transcribe audio via OpenAI Whisper.
+    3. Analyse transcript with GPT-4o for sentiment, summary, and pain points.
+    4. Persist structured results to Firestore.
+    5. Return the complete feedback record.
     """
-    Accept a .wav file upload, run emotion classification via the trained
-    1D-CNN, and return translated business metrics.
 
-    Returns:
-        JSON: {"Empathy": int, "Clarity": int, "Efficiency": int}
-    """
-    # Validate file type
-    if not file.filename.lower().endswith(".wav"):
+    # ----- Validate file extension -----
+    file_ext = _get_file_extension(file.filename)
+    if file_ext not in _ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=400,
-            detail="Only .wav files are accepted. Please upload a valid WAV audio file.",
+            detail=f"Unsupported file type '{file_ext}'. Allowed: {_ALLOWED_EXTENSIONS}",
         )
 
-    # Read uploaded file bytes
+    # ----- Step A: Speech-to-Text via Whisper -----
+    transcript: str = await _transcribe_audio(file)
+
+    # ----- Step B: LLM Analysis via GPT-4o -----
+    analysis: Dict[str, Any] = _analyse_transcript(transcript)
+
+    # ----- Step C: Persist to Firestore -----
+    feedback_record: Dict[str, Any] = _save_to_firestore(
+        patient_name=patient_name,
+        doctor_id=doctor_id,
+        department=department,
+        transcript=transcript,
+        analysis=analysis,
+    )
+
+    logger.info("Feedback %s processed successfully.", feedback_record["feedback_id"])
+    return feedback_record
+
+
+# ---------------------------------------------------------------------------
+# Pipeline helpers
+# ---------------------------------------------------------------------------
+
+
+def _get_file_extension(filename: str | None) -> str:
+    """Extract the lowercased file extension (including the dot) from a filename.
+
+    Args:
+        filename: Original filename from the upload, may be ``None``.
+
+    Returns:
+        Lowercased extension string, e.g. ``".wav"``.  Returns ``""`` if
+        filename is ``None`` or has no extension.
+    """
+    if not filename:
+        return ""
+    _, ext = os.path.splitext(filename)
+    return ext.lower()
+
+
+async def _transcribe_audio(file: UploadFile) -> str:
+    """Transcribe an uploaded audio file using OpenAI Whisper-1.
+
+    Args:
+        file: The uploaded audio ``UploadFile`` instance.
+
+    Returns:
+        The transcribed text.
+
+    Raises:
+        HTTPException: 500 if the Whisper API call fails.
+    """
+    if openai_client is None:
+        raise HTTPException(
+            status_code=500,
+            detail="Speech-to-text processing failed: OpenAI client not initialised.",
+        )
+
     try:
         audio_bytes = await file.read()
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to read uploaded file: {e}")
-
-    if len(audio_bytes) < 1000:
-        raise HTTPException(status_code=400, detail="Audio file is too small or empty.")
-
-    # Extract features
-    try:
-        features_tensor, zcr_mean = extract_features_from_bytes(audio_bytes)
-    except Exception as e:
+        transcription = openai_client.audio.transcriptions.create(
+            model="whisper-1",
+            file=(file.filename, audio_bytes),
+        )
+        transcript_text: str = transcription.text
+        logger.info(
+            "Whisper transcription completed (%d chars).", len(transcript_text)
+        )
+        return transcript_text
+    except Exception:
+        logger.exception("Whisper API call failed.")
         raise HTTPException(
-            status_code=422,
-            detail=f"Failed to process audio: {e}. Ensure the file is a valid WAV.",
+            status_code=500,
+            detail="Speech-to-text processing failed",
         )
 
-    # Run inference
-    with torch.no_grad():
-        features_tensor = features_tensor.to(device)
-        logits = model(features_tensor)             # (1, 8)
-        probs = F.softmax(logits, dim=1).squeeze()  # (8,)
-        probs_np = probs.cpu().numpy()
 
-    # Translate to business metrics
-    metrics = compute_business_metrics(probs_np, zcr_mean)
+def _analyse_transcript(transcript: str) -> Dict[str, Any]:
+    """Send the transcript to GPT-4o for sentiment analysis.
 
-    return metrics
+    Args:
+        transcript: Plain-text patient feedback transcript.
 
+    Returns:
+        Parsed JSON dict with keys ``sentiment``, ``summary``, ``pain_points``.
+
+    Raises:
+        HTTPException: 500 if the LLM call or JSON parsing fails.
+    """
+    if openai_client is None:
+        raise HTTPException(
+            status_code=500,
+            detail="Feedback analysis failed: OpenAI client not initialised.",
+        )
+
+    # --- Call GPT-4o ---
+    try:
+        completion = openai_client.chat.completions.create(
+            model="gpt-4o",
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": _ANALYSIS_SYSTEM_PROMPT},
+                {"role": "user", "content": transcript},
+            ],
+        )
+        raw_content: str = completion.choices[0].message.content
+    except Exception:
+        logger.exception("GPT-4o API call failed.")
+        raise HTTPException(
+            status_code=500,
+            detail="Feedback analysis failed",
+        )
+
+    # --- Parse the JSON response ---
+    try:
+        analysis: Dict[str, Any] = json.loads(raw_content)
+    except (json.JSONDecodeError, TypeError):
+        logger.exception("Failed to parse GPT-4o JSON response: %s", raw_content)
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to parse analysis results",
+        )
+
+    logger.info("LLM analysis complete — sentiment: %s", analysis.get("sentiment"))
+    return analysis
+
+
+def _save_to_firestore(
+    *,
+    patient_name: str,
+    doctor_id: str,
+    department: str,
+    transcript: str,
+    analysis: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Persist a structured feedback record to the ``patient_feedback`` Firestore collection.
+
+    Args:
+        patient_name: Name of the patient.
+        doctor_id: Attending doctor identifier.
+        department: Hospital department.
+        transcript: Whisper-generated transcript.
+        analysis: Parsed LLM analysis dict.
+
+    Returns:
+        The feedback record dict that was written (with ``timestamp`` replaced
+        by the string ``"SERVER_TIMESTAMP"`` for the JSON response, since the
+        actual server timestamp is resolved server-side).
+
+    Raises:
+        HTTPException: 500 if the Firestore write fails.
+    """
+    from firebase_admin import firestore as _firestore
+
+    if db is None:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to save feedback: Firestore client not initialised.",
+        )
+
+    feedback_id = f"FB-{uuid4().hex[:6].upper()}"
+
+    record: Dict[str, Any] = {
+        "feedback_id": feedback_id,
+        "timestamp": _firestore.SERVER_TIMESTAMP,
+        "patient_name": patient_name,
+        "doctor_id": doctor_id,
+        "department": department,
+        "transcript": transcript,
+        "sentiment": analysis.get("sentiment", "Unknown"),
+        "summary": analysis.get("summary", ""),
+        "pain_points": analysis.get("pain_points", []),
+    }
+
+    try:
+        db.collection("patient_feedback").document(feedback_id).set(record)
+        logger.info("Firestore document %s written.", feedback_id)
+    except Exception:
+        logger.exception("Firestore write failed for feedback %s.", feedback_id)
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to save feedback",
+        )
+
+    # Replace server sentinel with a JSON-serialisable placeholder for the response
+    response_record = {**record, "timestamp": "SERVER_TIMESTAMP"}
+    return response_record
+
+
+# ---------------------------------------------------------------------------
+# Entrypoint
+# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)

@@ -1,117 +1,93 @@
 import { useState } from "react";
-import { Download, ChevronDown, Bell } from "lucide-react";
-import ExecutiveOverview from "./components/ExecutiveOverview";
-import SpecialtyBenchmarking from "./components/SpecialtyBenchmarking";
-import ProviderDeepDive from "./components/ProviderDeepDive";
-
-type Tab = "executive" | "benchmarking" | "provider";
-
-const TABS: { id: Tab; label: string }[] = [
-  { id: "executive", label: "Executive Overview" },
-  { id: "benchmarking", label: "Specialty Benchmarking" },
-  { id: "provider", label: "Provider Deep-Dive" },
-];
-
-const DATE_RANGES = [
-  { value: "last7", label: "Last 7 Days" },
-  { value: "last30", label: "Last 30 Days" },
-  { value: "last90", label: "Last 90 Days" },
-  { value: "ytd", label: "Year to Date" },
-];
+import { Bell, Upload, LogOut, Shield } from "lucide-react";
+import AdminDashboard from "./components/AdminDashboard";
+import AudioUploadModal from "./components/AudioUploadModal";
+import { Toaster } from "./components/ui/sonner";
+import { useAuth } from "./contexts/AuthContext";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<Tab>("executive");
-  const [dateRange, setDateRange] = useState("last30");
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const { user, profile, signOut } = useAuth();
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6]">
-      {/* ── Top Header ── */}
-      <header className="bg-white border-b border-[#E5E7EB] px-8 h-[60px] flex items-center justify-between">
+    <div className="min-h-screen bg-slate-50/40 flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white">
+      {/* ─── Premium Enterprise Header ─── */}
+      <header className="bg-white border-b border-slate-200/80 px-8 h-[60px] flex items-center justify-between shrink-0 sticky top-0 z-30 shadow-sm/5">
         {/* Brand */}
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-[#2563EB] rounded flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/15">
             <span className="text-white text-xs font-bold tracking-tight">
               PX
             </span>
           </div>
-          <span className="text-[#111827] font-bold text-[17px] tracking-tight">
-            Ambient PX Analytics
-          </span>
+          <div>
+            <span className="text-slate-950 font-bold text-[14px] tracking-tight block">
+              PX Analytics
+            </span>
+            <span className="text-[10px] text-slate-400 font-semibold -mt-0.5 block">
+              Patient Experience Command Center
+            </span>
+          </div>
         </div>
 
-        {/* Actions */}
+        {/* Header Actions */}
         <div className="flex items-center gap-3">
-          {/* Date Picker */}
-          <div className="relative">
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="appearance-none border border-[#E5E7EB] rounded-[4px] pl-3 pr-8 py-1.5 text-sm text-gray-700 bg-white cursor-pointer focus:outline-none focus:border-[#2563EB] transition-colors"
-            >
-              {DATE_RANGES.map((r) => (
-                <option key={r.value} value={r.value}>
-                  {r.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              size={13}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-            />
-          </div>
+          {/* Role Indicator Badge */}
+          {profile?.role && (
+            <div className="hidden sm:flex items-center gap-1.5 bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-blue-100/50">
+              <Shield className="h-3 w-3" />
+              {profile.role}
+            </div>
+          )}
 
-          {/* Export PDF */}
-          <button className="flex items-center gap-1.5 border border-[#E5E7EB] rounded-[4px] px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors">
-            <Download size={13} className="text-gray-500" />
-            Export PDF
+          {/* Upload Feedback Button */}
+          <button
+            onClick={() => setIsUploadOpen(true)}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg px-4 py-2 text-xs font-semibold shadow-sm hover:shadow transition-all duration-200 cursor-pointer"
+            id="header-upload-btn"
+          >
+            <Upload size={13} />
+            Upload Feedback
           </button>
 
           {/* Notification bell */}
-          <button className="relative w-8 h-8 flex items-center justify-center rounded-[4px] hover:bg-gray-50 transition-colors">
-            <Bell size={15} className="text-gray-400" />
+          <button className="relative w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-50 border border-slate-100 transition-colors">
+            <Bell size={14} className="text-slate-500" />
             <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
           </button>
 
-          {/* Avatar */}
-          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
-            <span className="text-[#2563EB] text-xs font-bold">SJ</span>
+          {/* Sign Out / User Avatar */}
+          <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
+            <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center shrink-0 border border-blue-100">
+              <span className="text-blue-600 text-xs font-bold uppercase">
+                {profile?.displayName ? profile.displayName.slice(0, 2) : "AD"}
+              </span>
+            </div>
+            {user && (
+              <button
+                onClick={signOut}
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                title="Sign Out"
+                aria-label="Sign out"
+              >
+                <LogOut size={14} />
+              </button>
+            )}
           </div>
         </div>
       </header>
 
-      {/* ── Tab Navigation ── */}
-      <div className="bg-white border-b border-[#E5E7EB] px-8">
-        <nav className="flex" role="tablist">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              role="tab"
-              aria-selected={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`relative px-5 py-3.5 text-sm font-medium transition-colors focus:outline-none ${
-                activeTab === tab.id
-                  ? "text-[#2563EB]"
-                  : "text-gray-500 hover:text-gray-800"
-              }`}
-            >
-              {tab.label}
-              {/* Active indicator bar */}
-              <span
-                className={`absolute bottom-0 left-0 right-0 h-[2px] rounded-t-sm transition-colors ${
-                  activeTab === tab.id ? "bg-[#2563EB]" : "bg-transparent"
-                }`}
-              />
-            </button>
-          ))}
-        </nav>
-      </div>
+      {/* ─── Main Admin Command Center ─── */}
+      <AdminDashboard />
 
-      {/* ── Tab Views ── */}
-      <div>
-        {activeTab === "executive" && <ExecutiveOverview />}
-        {activeTab === "benchmarking" && <SpecialtyBenchmarking />}
-        {activeTab === "provider" && <ProviderDeepDive />}
-      </div>
+      {/* ─── Audio Upload Modal ─── */}
+      <AudioUploadModal
+        open={isUploadOpen}
+        onClose={() => setIsUploadOpen(false)}
+      />
+
+      {/* ─── Global Sonner Toasts ─── */}
+      <Toaster />
     </div>
   );
 }
