@@ -102,12 +102,13 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 
 _ANALYSIS_SYSTEM_PROMPT: str = (
-    "You are a medical feedback analyst. Analyze the following patient feedback "
-    "transcript. Return a JSON object with exactly three keys: "
-    "'sentiment' (strictly one of: 'Positive', 'Neutral', or 'Negative'), "
-    "'summary' (2-3 concise sentences summarizing the feedback), and "
-    "'pain_points' (an array of short strings representing specific complaints "
-    "or issues mentioned, empty array if none)."
+    "You are a clinical database analyst. Analyze the patient feedback transcript. "
+    "Return a raw JSON object only (no markdown, no preamble) with exactly three keys:\n"
+    "1. 'sentiment': strictly one of 'Positive', 'Neutral', or 'Negative'.\n"
+    "2. 'summary': 1 to 2 sentences summarizing the feedback (maximum 30 words). "
+    "Style must be objective, administrative, and clipped. Structure: [Primary Sentiment Driver] + [Specific Incident/Context]. "
+    "Do NOT use filler phrases like 'The patient stated', 'This feedback highlights', 'The patient felt', or 'Overall'.\n"
+    "3. 'pain_points': an array of short strings representing specific complaints mentioned, empty if none."
 )
 
 # Allowed audio extensions for upload
