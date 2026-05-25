@@ -9,12 +9,8 @@
 
 import {
   collection,
-  doc,
-  setDoc,
-  getDocs,
   addDoc,
   query,
-  where,
   orderBy,
   Timestamp,
 } from "firebase/firestore";
