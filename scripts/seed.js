@@ -121,6 +121,7 @@ async function seedConsultations() {
 
   // Track per-day counts for the log
   const dayCounts = {};
+  let frictionCount = 0;
 
   for (let i = 0; i < TOTAL_CONSULTATIONS; i++) {
     // Random day in the past 30 days (0 = today, 29 = oldest)
@@ -130,13 +131,46 @@ async function seedConsultations() {
     // Random provider
     const provider = PROVIDERS[randInt(0, PROVIDERS.length - 1)];
 
-    // Generate trending scores
-    const empathy = trendingScore(daysAgo, 60, 96);
-    const clarity = trendingScore(daysAgo, 62, 95);
-    const efficiency = trendingScore(daysAgo, 58, 93);
+    let empathy, clarity, efficiency, anxietyFlag;
 
-    // ~15% anxiety flag, weighted higher for low empathy
-    const anxietyFlag = empathy < 55 ? Math.random() < 0.6 : Math.random() < 0.15;
+    // ~15% chance of generating a "friction/pain point" consultation
+    const isFriction = Math.random() < 0.15;
+
+    if (isFriction) {
+      frictionCount++;
+      // Determine which area has the friction
+      const frictionType = randInt(0, 3);
+      if (frictionType === 0) {
+        // Empathy friction
+        empathy = randInt(25, 42);
+        clarity = trendingScore(daysAgo, 58, 80);
+        efficiency = trendingScore(daysAgo, 58, 80);
+      } else if (frictionType === 1) {
+        // Clarity friction
+        empathy = trendingScore(daysAgo, 58, 80);
+        clarity = randInt(25, 39);
+        efficiency = trendingScore(daysAgo, 58, 80);
+      } else if (frictionType === 2) {
+        // Efficiency friction
+        empathy = trendingScore(daysAgo, 58, 80);
+        clarity = trendingScore(daysAgo, 58, 80);
+        efficiency = randInt(20, 36);
+      } else {
+        // General poor interaction
+        empathy = randInt(30, 48);
+        clarity = randInt(30, 48);
+        efficiency = randInt(28, 48);
+      }
+      // High chance of anxiety flag for friction cases
+      anxietyFlag = Math.random() < 0.85;
+    } else {
+      // Normal/good interaction with upward trend
+      empathy = trendingScore(daysAgo, 62, 96);
+      clarity = trendingScore(daysAgo, 65, 95);
+      efficiency = trendingScore(daysAgo, 60, 93);
+      // Low baseline anxiety flag
+      anxietyFlag = Math.random() < 0.10;
+    }
 
     const doc = {
       timestamp: randomTimestampForDay(daysAgo),
@@ -178,7 +212,9 @@ async function seedConsultations() {
     console.log(`  Day -${day.padStart(2, "0")}: ${bar} (${count})`);
   }
 
-  console.log(`\n[seed] Total consultations written: ${totalWritten}`);
+  console.log(`\n[seed] Normal consultations: ${TOTAL_CONSULTATIONS - frictionCount}`);
+  console.log(`  [seed] Friction/Pain Point consultations: ${frictionCount}`);
+  console.log(`[seed] Total consultations written: ${totalWritten}`);
 }
 
 // ─── Delete Collection Helper ───
