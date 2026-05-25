@@ -47,10 +47,10 @@ const DEPARTMENTS = [
 
 const DOCTORS = {
   Cardiology: ["Dr. Sharma", "Dr. Patel"],
-  Neurology: ["Dr. Chen", "Dr. Williams"],
-  Pediatrics: ["Dr. Rodriguez", "Dr. Kim"],
-  Oncology: ["Dr. Nakamura"],
-  Orthopedics: ["Dr. Johnson"],
+  Neurology: ["Dr. Nair", "Dr. Sen"],
+  Pediatrics: ["Dr. Joshi", "Dr. Gupta"],
+  Oncology: ["Dr. Iyer"],
+  Orthopedics: ["Dr. Rao"],
 };
 
 const STEPS = [
