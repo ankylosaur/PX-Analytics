@@ -55,6 +55,7 @@ const PATIENT_NAMES = [
 
 // ─── All 50 Feedback Records (Hardcoded) ─────────────────────────────────────
 // Sentiment distribution: 28 Positive, 12 Neutral, 10 Negative
+// Summaries conform strictly to: [Primary Sentiment Driver] + [Specific Incident/Context] (no filler, max 30 words, 1-2 sentences)
 
 const FEEDBACK_DATA = [
   // ═══════════════════════════════════════════════════════════════════════════
@@ -67,7 +68,7 @@ const FEEDBACK_DATA = [
     department: "Cardiology",
     transcript: "Dr. Sharma was incredibly thorough during my consultation. She explained every step of my cardiac evaluation and made sure I understood my medication schedule before leaving. The nursing staff was also very attentive throughout my visit.",
     sentiment: "Positive",
-    summary: "Patient praised Dr. Sharma for thoroughness and clear communication during cardiac evaluation. Nursing staff also received positive feedback for attentiveness.",
+    summary: "Thorough cardiology consultation and clear medication review. Attentive nursing staff.",
     pain_points: [],
   },
   {
@@ -77,7 +78,7 @@ const FEEDBACK_DATA = [
     department: "Pediatrics",
     transcript: "The pediatrics team was wonderful with my daughter. Dr. Rodriguez made her feel comfortable and even used stuffed animals to explain the procedure. The nurses kept checking on us regularly, which really eased my anxiety as a parent.",
     sentiment: "Positive",
-    summary: "Parent expressed high satisfaction with Dr. Rodriguez's child-friendly approach and the nursing team's proactive follow-up during the pediatric visit.",
+    summary: "Comfortable child-friendly pediatric procedure. Proactive and regular nursing follow-ups.",
     pain_points: [],
   },
   {
@@ -87,7 +88,7 @@ const FEEDBACK_DATA = [
     department: "Cardiology",
     transcript: "Everything about my experience was great. Short wait times, friendly staff, and Dr. Patel gave me a clear follow-up plan for managing my blood pressure. I felt like my concerns were genuinely heard.",
     sentiment: "Positive",
-    summary: "Patient reported an efficient and positive experience with Dr. Patel, highlighting short wait times, personable staff, and a clear follow-up plan for blood pressure management.",
+    summary: "Short wait times and friendly staff. Clear blood pressure management follow-up plan.",
     pain_points: [],
   },
   {
@@ -97,7 +98,7 @@ const FEEDBACK_DATA = [
     department: "Neurology",
     transcript: "Dr. Chen took the time to explain my MRI results in terms I could actually understand. She didn't rush through anything and even drew a diagram to show where the issue was. I left feeling informed and confident about next steps.",
     sentiment: "Positive",
-    summary: "Patient commended Dr. Chen for clear, unhurried communication when reviewing MRI results. Visual aids and thorough explanations increased patient confidence.",
+    summary: "Detailed MRI review with helpful visual aids. Unhurried and clear communication.",
     pain_points: [],
   },
   {
@@ -107,7 +108,7 @@ const FEEDBACK_DATA = [
     department: "Orthopedics",
     transcript: "My knee replacement follow-up went smoothly. Dr. Johnson checked the healing progress carefully and adjusted my physical therapy plan. The front desk was also helpful with scheduling my next three appointments in one go.",
     sentiment: "Positive",
-    summary: "Patient satisfied with Dr. Johnson's thorough follow-up on knee replacement recovery. Administrative efficiency in scheduling future appointments was also appreciated.",
+    summary: "Smooth post-operative knee recovery check. Highly efficient appointment scheduling.",
     pain_points: [],
   },
   {
@@ -117,7 +118,7 @@ const FEEDBACK_DATA = [
     department: "Oncology",
     transcript: "Going through chemotherapy is terrifying, but Dr. Nakamura and the oncology nurses made me feel supported every step of the way. They answered all of my questions patiently and checked in on me emotionally, not just physically.",
     sentiment: "Positive",
-    summary: "Patient undergoing chemotherapy expressed deep gratitude for Dr. Nakamura's emotional support and the nursing team's holistic approach to care during treatment.",
+    summary: "Exceptional emotional and physical support during chemotherapy. Highly caring oncology team.",
     pain_points: [],
   },
   {
@@ -127,7 +128,7 @@ const FEEDBACK_DATA = [
     department: "Neurology",
     transcript: "Dr. Williams was fantastic during my neurology consultation. He listened carefully to my description of symptoms and ordered the right tests without making me feel like a number. The entire experience was professional and compassionate.",
     sentiment: "Positive",
-    summary: "Patient praised Dr. Williams for attentive listening and personalized care during neurology consultation. Professional yet compassionate demeanor was highlighted.",
+    summary: "Attentive symptom review and prompt diagnostic testing. Compassionate neurology care.",
     pain_points: [],
   },
   {
@@ -137,7 +138,7 @@ const FEEDBACK_DATA = [
     department: "Pediatrics",
     transcript: "Dr. Kim was amazing with my son who has severe needle anxiety. She spent extra time calming him down and used a numbing cream before the injection. My son actually said he wants to come back, which has never happened before!",
     sentiment: "Positive",
-    summary: "Parent highlighted Dr. Kim's exceptional handling of a child with needle anxiety, noting specialized techniques and patience that resulted in a remarkably positive experience for the child.",
+    summary: "Excellent pediatric needle anxiety management. Special numbing cream utilized.",
     pain_points: [],
   },
   {
@@ -147,7 +148,7 @@ const FEEDBACK_DATA = [
     department: "Cardiology",
     transcript: "I came in for a stress test and the whole process was well-organized. Dr. Sharma explained what to expect at each stage and the technicians were skilled and reassuring. Got my results explained clearly the same day.",
     sentiment: "Positive",
-    summary: "Patient reported a well-organized cardiac stress test experience. Dr. Sharma's proactive communication and same-day results explanation contributed to high satisfaction.",
+    summary: "Well-organized cardiac stress test. Reassuring technicians and same-day results review.",
     pain_points: [],
   },
   {
@@ -157,7 +158,7 @@ const FEEDBACK_DATA = [
     department: "Oncology",
     transcript: "Dr. Nakamura sat with me for over thirty minutes to discuss treatment options and their side effects. He made sure I understood the pros and cons of each approach and respected my wish to take a day to decide. I never felt pressured.",
     sentiment: "Positive",
-    summary: "Patient valued Dr. Nakamura's extensive time commitment to discussing treatment options and respecting patient autonomy in decision-making for oncology care.",
+    summary: "Thorough 30-minute oncology treatment options review. Highly supportive of patient autonomy.",
     pain_points: [],
   },
   {
@@ -167,7 +168,7 @@ const FEEDBACK_DATA = [
     department: "Cardiology",
     transcript: "Had an echocardiogram today and Dr. Patel walked me through the entire process beforehand. The waiting room was clean and comfortable, and I was seen within ten minutes of my appointment time. Really impressed with the efficiency.",
     sentiment: "Positive",
-    summary: "Patient commended Dr. Patel's pre-procedure communication and the clinic's operational efficiency, noting minimal wait times and well-maintained facilities.",
+    summary: "Clear pre-procedure walk-through for echocardiogram. Clean facilities and ten-minute wait time.",
     pain_points: [],
   },
   {
@@ -177,7 +178,7 @@ const FEEDBACK_DATA = [
     department: "Pediatrics",
     transcript: "Brought my twins in for their vaccinations and Dr. Rodriguez handled both of them brilliantly. She was gentle, quick, and even gave them stickers and juice boxes afterwards. The whole visit took less than 30 minutes.",
     sentiment: "Positive",
-    summary: "Parent praised Dr. Rodriguez's efficient and child-friendly approach to vaccinating twins, noting gentle technique and thoughtful rewards that made the visit smooth.",
+    summary: "Gentle and rapid pediatric vaccination for twins. Efficient visit under thirty minutes.",
     pain_points: [],
   },
   {
@@ -187,7 +188,7 @@ const FEEDBACK_DATA = [
     department: "Orthopedics",
     transcript: "After my shoulder surgery, Dr. Johnson's rehabilitation plan has been spot-on. Every follow-up visit feels thorough and I can clearly see the progress. The physical therapy team he recommended is also outstanding.",
     sentiment: "Positive",
-    summary: "Patient expressed strong satisfaction with Dr. Johnson's post-surgical rehabilitation plan and the quality of the recommended physical therapy team for shoulder recovery.",
+    summary: "Precise post-surgical shoulder rehabilitation plan. Outstanding recommended physical therapy team.",
     pain_points: [],
   },
   {
@@ -197,7 +198,7 @@ const FEEDBACK_DATA = [
     department: "Neurology",
     transcript: "I've been dealing with chronic migraines for years and Dr. Chen is the first neurologist who actually listened to my full history. She adjusted my medication and suggested lifestyle changes that have already started helping. Finally feel hopeful.",
     sentiment: "Positive",
-    summary: "Patient with chronic migraines praised Dr. Chen for comprehensive history-taking and effective treatment adjustments, expressing renewed hope after previous unsatisfactory consultations.",
+    summary: "Comprehensive medical history review for migraine treatment. Highly effective medication adjustments.",
     pain_points: [],
   },
   {
@@ -207,7 +208,7 @@ const FEEDBACK_DATA = [
     department: "Pediatrics",
     transcript: "Dr. Kim was very thorough during my daughter's annual checkup. She caught a minor issue with her vision that we hadn't noticed and referred us to a specialist right away. Very grateful for her attention to detail.",
     sentiment: "Positive",
-    summary: "Parent expressed gratitude for Dr. Kim's detailed pediatric examination that identified an unnoticed vision issue, leading to a timely specialist referral.",
+    summary: "Attentive pediatric checkup. Vision issue detected promptly, leading to immediate specialist referral.",
     pain_points: [],
   },
   {
@@ -217,7 +218,7 @@ const FEEDBACK_DATA = [
     department: "Neurology",
     transcript: "The neurology department is run like clockwork. I arrived, checked in quickly, and Dr. Williams was ready for me almost immediately. His bedside manner is warm and he explained my EEG results with great clarity.",
     sentiment: "Positive",
-    summary: "Patient highlighted the neurology department's operational efficiency and Dr. Williams' warm bedside manner, specifically praising the clarity of EEG result explanations.",
+    summary: "Excellent neurology department operational efficiency. Warm bedside manner and clear EEG explanations.",
     pain_points: [],
   },
   {
@@ -227,7 +228,7 @@ const FEEDBACK_DATA = [
     department: "Cardiology",
     transcript: "Dr. Sharma genuinely cares about her patients. She remembered details from my last visit and asked about my exercise routine. The cardiac rehab program she recommended has made a real difference in my daily energy levels.",
     sentiment: "Positive",
-    summary: "Patient noted Dr. Sharma's personalized care and continuity between visits. The recommended cardiac rehabilitation program has yielded tangible improvements in quality of life.",
+    summary: "Personalized cardiology care and high continuity. Recommended rehab program improved daily energy.",
     pain_points: [],
   },
   {
@@ -237,7 +238,7 @@ const FEEDBACK_DATA = [
     department: "Oncology",
     transcript: "The infusion center staff made my treatment session as comfortable as possible. Warm blankets, regular check-ins, and Dr. Nakamura stopped by personally to see how I was doing. It's the little things that matter most during cancer treatment.",
     sentiment: "Positive",
-    summary: "Patient praised the infusion center's comfort measures and Dr. Nakamura's personal attention during treatment. Small gestures of care were noted as particularly meaningful during cancer therapy.",
+    summary: "Highly comfortable oncology infusion session. Attentive staff and personal check-in by physician.",
     pain_points: [],
   },
   {
@@ -247,7 +248,7 @@ const FEEDBACK_DATA = [
     department: "Orthopedics",
     transcript: "Came in with severe back pain and Dr. Johnson diagnosed the issue quickly. He was honest about the recovery timeline and didn't oversell the treatment. I appreciate doctors who set realistic expectations rather than making empty promises.",
     sentiment: "Positive",
-    summary: "Patient valued Dr. Johnson's quick diagnostic ability and honest communication about recovery timelines for back pain, appreciating realistic expectation-setting.",
+    summary: "Rapid orthopedic diagnosis for back pain. Honest and realistic recovery timeline set.",
     pain_points: [],
   },
   {
@@ -257,7 +258,7 @@ const FEEDBACK_DATA = [
     department: "Cardiology",
     transcript: "I was nervous about my heart catheterization, but Dr. Patel took time before the procedure to walk me through every step. The post-procedure care was excellent too — the nurses made sure I was comfortable and monitored closely.",
     sentiment: "Positive",
-    summary: "Patient praised Dr. Patel's reassuring pre-procedure communication for heart catheterization and the nursing team's attentive post-procedure monitoring and comfort care.",
+    summary: "Reassuring pre-procedure explanation for heart catheterization. Attentive post-procedure monitoring.",
     pain_points: [],
   },
   {
@@ -267,7 +268,7 @@ const FEEDBACK_DATA = [
     department: "Pediatrics",
     transcript: "Dr. Rodriguez is our family's pediatrician and we wouldn't go anywhere else. She knows our kids by name, remembers their medical history, and always makes time for our questions. The receptionist team is also wonderfully friendly.",
     sentiment: "Positive",
-    summary: "Long-term patient family praised Dr. Rodriguez for personalized and consistent pediatric care, noting her familiarity with patients and the friendly front-desk staff.",
+    summary: "Consistent and caring pediatric follow-up. Warm staff and accommodating appointment discussions.",
     pain_points: [],
   },
   {
@@ -277,7 +278,7 @@ const FEEDBACK_DATA = [
     department: "Neurology",
     transcript: "After my MS diagnosis, Dr. Chen has been my rock. She stays updated on the latest research and discusses new treatment options with me proactively. I never feel like just another patient — she treats me as a partner in my care.",
     sentiment: "Positive",
-    summary: "Patient with MS expressed deep trust in Dr. Chen's expertise and proactive approach to treatment. The collaborative doctor-patient relationship was particularly valued.",
+    summary: "Proactive discuss of latest MS research and treatments. Collaborative care approach.",
     pain_points: [],
   },
   {
@@ -287,7 +288,7 @@ const FEEDBACK_DATA = [
     department: "Pediatrics",
     transcript: "Brought my newborn in for her first well-baby visit. Dr. Kim was incredibly gentle and patient, explaining every developmental milestone we should watch for. She also took time to address my wife's breastfeeding concerns.",
     sentiment: "Positive",
-    summary: "Parent praised Dr. Kim's gentleness during a newborn well-baby visit and her comprehensive guidance on developmental milestones and breastfeeding support.",
+    summary: "Gentle newborn well-baby checkup. Practical breastfeeding support and clear developmental guidance.",
     pain_points: [],
   },
   {
@@ -297,7 +298,7 @@ const FEEDBACK_DATA = [
     department: "Cardiology",
     transcript: "I had a cardiac scare and was rushed to the ER. Dr. Sharma arrived quickly and her calm, confident manner immediately put me at ease. The follow-up plan she created was detailed and she made sure I had her nurse's direct line for questions.",
     sentiment: "Positive",
-    summary: "Patient praised Dr. Sharma's rapid response and calming presence during a cardiac emergency. The comprehensive follow-up plan and direct communication access were also appreciated.",
+    summary: "Rapid response and calm bedside presence during cardiac scare. Clear communication access.",
     pain_points: [],
   },
   {
@@ -307,7 +308,7 @@ const FEEDBACK_DATA = [
     department: "Neurology",
     transcript: "Dr. Williams detected early signs of peripheral neuropathy that my previous doctor missed. He explained the condition clearly and started me on a treatment plan immediately. I'm grateful he caught it early.",
     sentiment: "Positive",
-    summary: "Patient credited Dr. Williams with detecting peripheral neuropathy missed by a previous physician. Prompt diagnosis and clear explanation of the treatment plan were highlighted.",
+    summary: "Prompt detection of peripheral neuropathy. Immediate start on structured treatment plan.",
     pain_points: [],
   },
   {
@@ -317,7 +318,7 @@ const FEEDBACK_DATA = [
     department: "Orthopedics",
     transcript: "The cast removal process was quick and painless. Dr. Johnson checked the healed fracture with an X-ray and was pleased with the result. He gave me clear instructions on gradually returning to my normal activities.",
     sentiment: "Positive",
-    summary: "Patient reported a smooth cast removal experience with Dr. Johnson, noting efficient post-healing assessment and clear activity resumption guidelines.",
+    summary: "Painless wrist fracture cast removal. Clear instructions for returning to normal activities.",
     pain_points: [],
   },
   {
@@ -327,7 +328,7 @@ const FEEDBACK_DATA = [
     department: "Oncology",
     transcript: "Dr. Nakamura delivered difficult news with remarkable sensitivity. He gave us time to process, answered every question we had, and connected us with the hospital's counseling service. His empathy during such a hard time meant the world to our family.",
     sentiment: "Positive",
-    summary: "Patient's family praised Dr. Nakamura's sensitivity in delivering difficult oncology news. Emotional support, thorough Q&A, and counseling referral were deeply valued.",
+    summary: "Empathetic delivery of difficult oncology prognosis. Clear explanation and counseling referral.",
     pain_points: [],
   },
   {
@@ -337,7 +338,7 @@ const FEEDBACK_DATA = [
     department: "Cardiology",
     transcript: "My annual cardiac checkup with Dr. Patel was thorough as always. He reviewed my cholesterol levels, adjusted one of my medications, and reminded me about dietary changes. The lab work was processed quickly and results shared the same day.",
     sentiment: "Positive",
-    summary: "Patient appreciated Dr. Patel's thorough annual cardiac review, including medication adjustments and dietary guidance. Same-day lab results added to the efficient experience.",
+    summary: "Thorough annual checkup and lab work. Same-day test results provided.",
     pain_points: [],
   },
 
@@ -351,7 +352,7 @@ const FEEDBACK_DATA = [
     department: "Neurology",
     transcript: "My appointment went fine. Dr. Chen was professional but seemed a bit rushed during the consultation. The waiting room could use more comfortable seating, but overall no major complaints.",
     sentiment: "Neutral",
-    summary: "Patient found the neurology appointment satisfactory but noted the doctor appeared rushed. Minor facility improvement suggestion regarding waiting room seating.",
+    summary: "Professional neurology checkup. Doctor appeared rushed; waiting area seating was uncomfortable.",
     pain_points: ["Rushed consultation"],
   },
   {
@@ -361,7 +362,7 @@ const FEEDBACK_DATA = [
     department: "Cardiology",
     transcript: "Treatment was adequate and the results were explained clearly enough. I wish I had more time to ask questions during the consultation, but Dr. Sharma did cover the essentials.",
     sentiment: "Neutral",
-    summary: "Patient found treatment adequate with satisfactory result explanations but felt the consultation time was insufficient for all questions. Core medical needs were met.",
+    summary: "Adequate cardiac checkup. Consultation felt rushed; limited opportunity to ask questions.",
     pain_points: ["Rushed consultation"],
   },
   {
@@ -371,7 +372,7 @@ const FEEDBACK_DATA = [
     department: "Orthopedics",
     transcript: "The medical care was solid but the parking situation at the hospital is really frustrating. I circled the lot for 20 minutes before finding a spot. The appointment itself was fine once I got inside.",
     sentiment: "Neutral",
-    summary: "Patient was satisfied with medical care quality but experienced significant frustration with hospital parking availability, delaying their overall visit experience.",
+    summary: "Competent orthopedic care. Frustrating 20-minute search for hospital parking.",
     pain_points: ["Parking difficulties"],
   },
   {
@@ -381,7 +382,7 @@ const FEEDBACK_DATA = [
     department: "Pediatrics",
     transcript: "Dr. Kim was good with my child but the appointment ran about 40 minutes late. I understand doctors get behind schedule, but some communication about the delay would have been appreciated.",
     sentiment: "Neutral",
-    summary: "Patient acknowledged quality pediatric care but was dissatisfied with a 40-minute schedule delay and the lack of proactive communication about the wait time.",
+    summary: "Good pediatric care. Forty-minute delay without proactive communication from staff.",
     pain_points: ["Long wait times"],
   },
   {
@@ -391,7 +392,7 @@ const FEEDBACK_DATA = [
     department: "Oncology",
     transcript: "The oncology department is very professional and the medical care is excellent. However, the ward was quite noisy during my treatment session — other patients' visitors were talking loudly and it was hard to rest.",
     sentiment: "Neutral",
-    summary: "Patient praised oncology care quality but reported noise disturbances in the ward from visitors, which impacted their ability to rest during treatment.",
+    summary: "Excellent oncology treatment. High noise levels in ward due to loud visitors.",
     pain_points: ["Noise levels in ward"],
   },
   {
@@ -401,7 +402,7 @@ const FEEDBACK_DATA = [
     department: "Neurology",
     transcript: "Dr. Williams is knowledgeable, no doubt about it. But the follow-up process could be better. I was told I'd get a call within two days with my test results, but had to call them myself after a week.",
     sentiment: "Neutral",
-    summary: "Patient recognized Dr. Williams' medical expertise but was disappointed by the delayed follow-up on test results, requiring patient-initiated contact after a week.",
+    summary: "Competent neurology care. Test results delayed one week, requiring patient follow-up.",
     pain_points: ["Inadequate follow-up"],
   },
   {
@@ -411,7 +412,7 @@ const FEEDBACK_DATA = [
     department: "Pediatrics",
     transcript: "Decent visit overall. Dr. Rodriguez was friendly and the checkup was thorough. The only issue was that the hospital food in the cafeteria was quite bland — my son refused to eat it while we waited.",
     sentiment: "Neutral",
-    summary: "Patient reported a satisfactory pediatric visit with friendly staff. The only complaint was regarding the quality and appeal of hospital cafeteria food.",
+    summary: "Friendly pediatric checkup. Hospital cafeteria food was noted as extremely bland.",
     pain_points: ["Food quality concerns"],
   },
   {
@@ -421,7 +422,7 @@ const FEEDBACK_DATA = [
     department: "Cardiology",
     transcript: "The check-in process was smooth and the nurses were helpful. Dr. Patel seemed competent but I felt like the consultation was a bit surface-level. I left with some unanswered questions about my long-term cardiac health.",
     sentiment: "Neutral",
-    summary: "Patient found the check-in process efficient but felt the consultation lacked depth, leaving unresolved questions about long-term cardiac health management.",
+    summary: "Competent cardiologist review. Consultation lacked depth; unresolved questions on long-term health.",
     pain_points: [],
   },
   {
@@ -431,7 +432,7 @@ const FEEDBACK_DATA = [
     department: "Orthopedics",
     transcript: "Dr. Johnson did a good job with my wrist examination. The X-ray technician was professional too. My only gripe is the uncomfortable chairs in the waiting area — not ideal when you're already in pain.",
     sentiment: "Neutral",
-    summary: "Patient was satisfied with the orthopedic examination and radiology services but noted uncomfortable waiting area seating, which was particularly problematic given existing pain.",
+    summary: "Good orthopedic examination. Waiting room seating was noted as highly uncomfortable.",
     pain_points: ["Uncomfortable facilities"],
   },
   {
@@ -441,7 +442,7 @@ const FEEDBACK_DATA = [
     department: "Neurology",
     transcript: "Had a routine follow-up for my epilepsy medication. Dr. Chen reviewed everything and kept my current prescription. The visit itself was uneventful, which I suppose is a good thing. Nothing exceptional to report either way.",
     sentiment: "Neutral",
-    summary: "Patient had a routine and uneventful epilepsy follow-up. No issues were reported, but the experience was perceived as unremarkable rather than notably positive.",
+    summary: "Routine epilepsy follow-up appointment. Prescription maintained; standard visit with no issues.",
     pain_points: [],
   },
   {
@@ -451,7 +452,7 @@ const FEEDBACK_DATA = [
     department: "Cardiology",
     transcript: "I had trouble scheduling this appointment — the online system kept glitching and I had to call in three times. Once I actually got to the appointment, Dr. Sharma was great, but the scheduling process needs work.",
     sentiment: "Neutral",
-    summary: "Patient experienced significant frustration with the appointment scheduling system but was satisfied with the actual medical consultation with Dr. Sharma.",
+    summary: "Excellent cardiac care. Significant scheduling difficulties due to online system glitches.",
     pain_points: ["Appointment scheduling issues"],
   },
   {
@@ -461,7 +462,7 @@ const FEEDBACK_DATA = [
     department: "Oncology",
     transcript: "The medical care at the oncology department is top-notch but the hospital could do better with staff availability at the reception. I stood waiting for five minutes before anyone acknowledged me.",
     sentiment: "Neutral",
-    summary: "Patient praised oncology medical care quality but identified a gap in reception staffing, noting an unacceptable wait for initial acknowledgment upon arrival.",
+    summary: "Solid oncology care. Reception area understaffed, resulting in a five-minute wait.",
     pain_points: ["Staff availability issues"],
   },
 
@@ -475,7 +476,7 @@ const FEEDBACK_DATA = [
     department: "Cardiology",
     transcript: "I waited over three hours past my scheduled appointment time. When I finally saw the doctor, the consultation lasted barely five minutes. Very disappointing, especially given how serious cardiac issues are.",
     sentiment: "Negative",
-    summary: "Patient experienced an excessive three-hour wait followed by a rushed five-minute consultation. The mismatch between wait time and consultation depth was particularly frustrating given the severity of cardiac concerns.",
+    summary: "Excessive three-hour wait time. Rushed five-minute cardiac consultation.",
     pain_points: ["Long wait times", "Rushed consultation"],
   },
   {
@@ -485,7 +486,7 @@ const FEEDBACK_DATA = [
     department: "Neurology",
     transcript: "The billing department lost my insurance information twice. I had to call back four times over two weeks to get it resolved. The medical care from Dr. Williams was fine, but the administrative side is absolutely terrible.",
     sentiment: "Negative",
-    summary: "Patient reported repeated insurance information loss and required four follow-up calls over two weeks to resolve billing issues. Medical care was adequate but administrative failures severely impacted overall experience.",
+    summary: "Lost insurance records and billing issues. Four follow-up calls required.",
     pain_points: ["Billing errors", "Administrative delays"],
   },
   {
@@ -495,7 +496,7 @@ const FEEDBACK_DATA = [
     department: "Pediatrics",
     transcript: "My discharge paperwork had errors in the medication dosage for my child. If I hadn't double-checked, my daughter could have received the wrong amount. This is unacceptable, especially in a pediatric setting where dosing precision is critical.",
     sentiment: "Negative",
-    summary: "Patient discovered medication dosage errors in pediatric discharge paperwork. The potentially dangerous mistake was caught only through the parent's own vigilance, raising serious patient safety concerns.",
+    summary: "Dangerous dosage error on pediatric discharge paperwork. Caught by parent vigilance.",
     pain_points: ["Slow discharge process", "Medication instructions unclear", "Administrative delays"],
   },
   {
@@ -505,7 +506,7 @@ const FEEDBACK_DATA = [
     department: "Orthopedics",
     transcript: "The nurses were great, but it took four hours to get my discharge paperwork after my procedure. I was ready to leave by noon but didn't get out until almost 4 PM. The wait was exhausting and completely unnecessary.",
     sentiment: "Negative",
-    summary: "Patient praised nursing staff but was highly frustrated by the four-hour delay in receiving discharge paperwork, extending the visit by several unnecessary hours.",
+    summary: "Exhausting four-hour wait for post-procedure discharge paperwork. Unacceptable administrative delay.",
     pain_points: ["Slow discharge process", "Administrative delays"],
   },
   {
@@ -515,7 +516,7 @@ const FEEDBACK_DATA = [
     department: "Cardiology",
     transcript: "Dr. Patel barely made eye contact during my entire visit. He typed on his computer the whole time and didn't ask about how I was feeling emotionally about my diagnosis. I left feeling like a chart number, not a person.",
     sentiment: "Negative",
-    summary: "Patient felt dehumanized during the cardiology visit due to the doctor's lack of eye contact and emotional engagement. The absence of empathy during a sensitive diagnostic discussion was deeply unsatisfying.",
+    summary: "Cold, disengaged cardiology visit. Doctor made minimal eye contact and lacked empathy.",
     pain_points: ["Lack of empathy", "Poor communication"],
   },
   {
@@ -525,7 +526,7 @@ const FEEDBACK_DATA = [
     department: "Neurology",
     transcript: "My medication was changed last visit but nobody explained the potential side effects properly. I experienced severe dizziness for two weeks before I called back and learned it was a common reaction they should have warned me about.",
     sentiment: "Negative",
-    summary: "Patient suffered avoidable side effects for two weeks due to inadequate medication counseling at the time of prescription change. Failure to communicate known side effects represents a significant care gap.",
+    summary: "Severe medication side effects experienced. Proper warning and counseling not provided.",
     pain_points: ["Medication instructions unclear", "Poor communication", "Inadequate follow-up"],
   },
   {
@@ -535,7 +536,7 @@ const FEEDBACK_DATA = [
     department: "Pediatrics",
     transcript: "Tried to schedule a follow-up for my son and was told the earliest available slot was six weeks out. When I explained it was urgent, the receptionist was dismissive and said there was nothing she could do. Ended up going to another hospital.",
     sentiment: "Negative",
-    summary: "Patient was unable to secure a timely pediatric follow-up appointment and felt dismissed by reception staff. The six-week wait and lack of urgency accommodation led the patient to seek care elsewhere.",
+    summary: "Dismissive pediatric receptionist. Unacceptable six-week wait for urgent follow-up appointment.",
     pain_points: ["Appointment scheduling issues", "Staff availability issues", "Lack of empathy"],
   },
   {
@@ -545,7 +546,7 @@ const FEEDBACK_DATA = [
     department: "Oncology",
     transcript: "The treatment itself was fine, but the communication between departments is broken. My oncologist ordered labs that the lab said they never received. I was bounced between three departments for an hour trying to sort it out. Exhausting.",
     sentiment: "Negative",
-    summary: "Patient experienced a breakdown in inter-departmental communication when lab orders were lost. Being redirected between three departments for an hour created unnecessary burden on an already stressed oncology patient.",
+    summary: "Inter-departmental communication failure. Lost lab orders caused one-hour delay.",
     pain_points: ["Poor communication", "Administrative delays"],
   },
   {
@@ -555,7 +556,7 @@ const FEEDBACK_DATA = [
     department: "Neurology",
     transcript: "I was told to arrive 30 minutes early to fill out paperwork, which I did. Then I still waited over two hours past my scheduled time. There were not enough staff at the front desk and nobody apologized for the delay. I felt completely disrespected.",
     sentiment: "Negative",
-    summary: "Patient experienced a two-hour delay despite arriving early as instructed. Inadequate front desk staffing and the absence of any apology compounded the frustration and perceived disrespect.",
+    summary: "Two-hour waiting delay despite early arrival. Reception desk understaffed and apologetic.",
     pain_points: ["Long wait times", "Staff availability issues"],
   },
   {
@@ -565,23 +566,17 @@ const FEEDBACK_DATA = [
     department: "Orthopedics",
     transcript: "The follow-up after my surgery was practically nonexistent. I was discharged with a generic instruction sheet and no one called to check how I was recovering. When I called with concerns about swelling, I was put on hold for 45 minutes.",
     sentiment: "Negative",
-    summary: "Patient reported severely lacking post-surgical follow-up care, receiving only generic instructions upon discharge. Attempts to reach the clinic with recovery concerns resulted in an unacceptable 45-minute hold time.",
+    summary: "Nonexistent post-surgical follow-up. Swelling concerns resulted in 45-minute hold time.",
     pain_points: ["Inadequate follow-up", "Poor communication", "Staff availability issues"],
   },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/**
- * Random integer between min and max (inclusive).
- */
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-/**
- * Generate a random timestamp within a specific day, between 7 AM and 7 PM.
- */
 function randomTimestampForDay(daysAgo) {
   const now = new Date();
   const date = new Date(now);
@@ -616,6 +611,7 @@ async function deleteCollection(collectionName) {
       await batch.commit();
       console.log(`  [clear] Deleted ${count}/${total} documents...`);
       batch = db.batch();
+      count = 0;
     }
   }
 
@@ -632,11 +628,8 @@ async function deleteCollection(collectionName) {
 async function seedFeedback() {
   console.log(`[seed] Inserting ${FEEDBACK_DATA.length} feedback documents...\n`);
 
-  // Pre-assign timestamps distributed over 30 days
-  // Spread records roughly evenly, with some randomness
   const daysDistribution = [];
   for (let i = 0; i < FEEDBACK_DATA.length; i++) {
-    // Distribute across 0-29 days ago
     const daysAgo = randInt(0, 29);
     daysDistribution.push(daysAgo);
   }
@@ -645,7 +638,6 @@ async function seedFeedback() {
   let batchCount = 0;
   let totalWritten = 0;
 
-  // Tracking for summary
   const sentimentCounts = { Positive: 0, Neutral: 0, Negative: 0 };
   const departmentCounts = {};
 
@@ -665,17 +657,15 @@ async function seedFeedback() {
       pain_points: record.pain_points,
     };
 
-    // Track distributions
     sentimentCounts[record.sentiment]++;
     departmentCounts[record.department] = (departmentCounts[record.department] || 0) + 1;
 
-    const ref = db.collection(COLLECTION).doc(); // auto-generated ID
+    const ref = db.collection(COLLECTION).doc();
     batch.set(ref, doc);
     batchCount++;
 
     console.log(`  [+] ${record.feedback_id} | ${record.sentiment.padEnd(8)} | ${record.department.padEnd(12)} | ${record.doctor_id.padEnd(15)} | ${record.patient_name}`);
 
-    // Commit in batches
     if (batchCount >= BATCH_LIMIT) {
       await batch.commit();
       totalWritten += batchCount;
@@ -685,14 +675,12 @@ async function seedFeedback() {
     }
   }
 
-  // Commit remaining
   if (batchCount > 0) {
     await batch.commit();
     totalWritten += batchCount;
     console.log(`\n  [batch] Committed ${totalWritten}/${FEEDBACK_DATA.length} documents`);
   }
 
-  // ─── Print Summary ──────────────────────────────────────────────────────
   console.log("\n" + "═".repeat(55));
   console.log("  SEEDING COMPLETE — Summary");
   console.log("═".repeat(55));
@@ -723,18 +711,13 @@ async function main() {
   console.log("═".repeat(55));
 
   try {
-    // Step 1: Clear existing data
     const deleted = await deleteCollection(COLLECTION);
-
-    // Step 2: Seed fresh data
     await seedFeedback();
-
     console.log("[seed] DONE. patient_feedback collection has been seeded with 50 records.");
     console.log("[seed] Verify in Firebase Console or refresh your frontend.\n");
   } catch (err) {
     console.error("\n[seed] ERROR:", err.message);
     console.error(err.stack);
-    console.error("[seed] Make sure serviceAccountKey.json is in this directory.");
     process.exit(1);
   }
 
