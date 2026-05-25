@@ -38,6 +38,19 @@ These scores (0–100) are saved to Firestore and instantly visualized across th
 
 ---
 
+## Premium UI/UX Polish & AI-First Redesign
+
+The dashboard has been customized to meet strict enterprise SaaS design standards:
+- **Header Cleanliness**: Removed redundant visual clutter from the dashboard header, creating a clean workspace focal point.
+- **Premium Recharts Styling**: The `SentimentTrendChart` is built with custom SVG linear gradients (fade stops `0.4` to `0`), faint dashed horizontal gridlines, and a high-fidelity custom glassmorphism tooltip (`bg-white/90 backdrop-blur-md shadow-xl`).
+- **Snappy Cubic-Bezier Transitions**: Replaced basic Radix dialog transitions with snappy cubic-bezier entrance curves (`ease-[cubic-bezier(0.32,0.72,0,1)]`) and backdrop blurs (`backdrop-blur-sm bg-slate-900/40`).
+- **Sticky Table Columns**: Feedback grids support horizontal scrolling on smaller viewports with a sticky Date column that maintains background state on row hovers.
+- **Sticky Detail Headers**: Scroll-active listeners inside patient and doctor drawers keep core identifiers and KPI summaries sticky at the top, fading in a subtle separator border and shadow only when content scrolls underneath.
+- **AI-First Feedback Cards**: Reordered patient sentiment logs to highlight the **AI Clinical Summary** first (styled as a premium component using an Indigo background and Lucide Sparkles icon) and collapsed raw transcripts into a native expandable details accordion.
+- **Indian Names Database Reseed**: Cleaned and reseeded the Firestore collection with 50 realistic patient and doctor records using exclusively Indian names, and aligned user drop-down lists in the upload controls accordingly.
+
+---
+
 ## Architecture
 
 ```
@@ -141,7 +154,8 @@ EY Patient Experience/
 │   └── best_model.pth            # Trained weights (gitignored)
 │
 ├── scripts/                      # Utility scripts
-│   ├── seed.js                   # Firestore seeder (Firebase Admin)
+│   ├── seed_feedback.js          # Firestore seeder (using Indian patient/doctor names)
+│   ├── wipe_legacy_firestore.js  # Legacy Firestore collection cleaner
 │   ├── package.json
 │   └── serviceAccountKey.json    # Admin credentials (gitignored)
 │
@@ -391,10 +405,10 @@ To populate the dashboard with realistic demo data:
 ```powershell
 cd scripts
 npm install
-node seed.js
+node seed_feedback.js
 ```
 
-This injects **150 consultations** across 5 providers over 30 days with upward-trending scores. Refresh the dashboard — all charts populate instantly via `onSnapshot`.
+This cleans legacy entries and seeds **50 mock patient consultations** across 6 providers over the last 30 days. The database is seeded exclusively with Indian patient and doctor names. All charts populate instantly via real-time Firestore listeners (`onSnapshot`).
 
 > ⚠️ `serviceAccountKey.json` is gitignored. Never commit it.
 
