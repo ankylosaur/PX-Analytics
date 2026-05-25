@@ -1,6 +1,6 @@
 # Ambient PX Analytics
 
-> **An AI-powered healthcare business intelligence platform that derives Patient Experience (PX) metrics from ambient consultation audio — eliminating the need for traditional post-visit surveys.**
+> **An AI-powered patient experience (PX) analytics dashboard that transcribes ambient clinician-patient consultation recordings and extracts structured sentiment data using OpenAI Whisper and GPT-4o — eliminating the need for traditional post-visit surveys.**
 
 ---
 
@@ -10,98 +10,76 @@
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
-- [Phase 1: Acoustic Sentiment Engine (ML Backend)](#phase-1-acoustic-sentiment-engine-ml-backend)
-  - [RAVDESS Dataset](#ravdess-dataset)
-  - [Feature Extraction](#feature-extraction)
-  - [Model Architecture](#model-architecture)
-  - [Heuristic Mapping Layer](#heuristic-mapping-layer)
-- [Phase 2: Firebase Backend](#phase-2-firebase-backend)
+- [Acoustic & Sentiment Pipeline](#acoustic--sentiment-pipeline)
+  - [Speech-to-Text (STT) via Whisper](#speech-to-text-stt-via-whisper)
+  - [Clinical Text Analysis via GPT-4o](#clinical-text-analysis-via-gpt-4o)
+  - [Database Persistence](#database-persistence)
+- [Firebase & Firestore Database Architecture](#firebase--firestore-database-architecture)
   - [Firestore Collections](#firestore-collections)
   - [Role-Based Access Control (RBAC)](#role-based-access-control-rbac)
-- [Phase 3: Frontend Integration](#phase-3-frontend-integration)
-- [Phase 4: Live Dashboard](#phase-4-live-dashboard)
+- [Frontend Real-time Query Architecture](#frontend-real-time-query-architecture)
+  - [Client-Side In-Memory Filtering](#client-side-in-memory-filtering)
+  - [Derived Metric Computations](#derived-metric-computations)
 - [Getting Started](#getting-started)
 - [Environment Variables](#environment-variables)
-- [Security](#security)
+- [Security & Rule Configurations](#security--rule-configurations)
 
 ---
 
 ## Overview
 
-Traditional healthcare patient experience measurement relies on post-visit surveys with low capture rates (~5%). Ambient PX Analytics resolves this by using a **Y-Split Processing** architecture to passively analyze consultation audio in real time, achieving **100% capture** without patient effort.
+Traditional healthcare patient experience measurement relies on post-visit surveys with low average capture rates (~5%). Ambient PX Analytics resolves this by capturing ambient consultation audio in real time, achieving **100% capture** without patient or provider effort.
 
-The platform processes `.wav` audio files through a trained 1D Convolutional Neural Network to classify emotions, then translates raw emotion logits into three business-ready metrics:
-
-| Metric | Description |
-|--------|-------------|
-| **Empathy** | How emotionally attuned the provider sounds (calm/happy vs. angry/fearful) |
-| **Clarity** | Speech tempo quality derived from Zero-Crossing Rate |
-| **Efficiency** | Composite score balancing positive communication against negative emotion load |
-
-These scores (0–100) are saved to Firestore and instantly visualized across the dashboard.
+The platform uploads consultation recordings through a FastAPI backend which transcribes the audio via OpenAI Whisper, analyzes the transcript with GPT-4o to categorize sentiment (Positive, Neutral, or Negative), and generates a concise, executive clinical summary and pain point list. Results are persisted to Cloud Firestore and instantly visualised across the admin dashboard.
 
 ---
 
 ## Architecture
 
 ```
-                        ┌─────────────────────────────┐
-                        │       React Frontend         │
-                        │   (Vite + Tailwind + Recharts)│
-                        └────────────┬────────────────┘
-                                     │
-                ┌─────────────────────┼─────────────────────┐
-                │                     │                     │
-                ▼                     ▼                     ▼
-     ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
-     │  FastAPI ML API  │  │  Firebase Auth   │  │    Firestore     │
-     │  (localhost:8000)│  │  (RBAC: Admin /  │  │  (consultations, │
-     │  POST /analyze-  │  │   Provider)      │  │   providers,     │
-     │  audio           │  └──────────────────┘  │   users)         │
-     └────────┬─────────┘                        └──────────────────┘
-              │                                           ▲
-              │  1. Upload .wav                           │
-              │  2. Run 1D-CNN inference                  │
-              │  3. Return metrics JSON                   │
-              │  4. Frontend writes to Firestore ─────────┘
-              │
-     ┌────────▼─────────┐
-     │   EmotionCNN     │
-     │  (PyTorch 1D-CNN)│
-     │  RAVDESS trained │
-     │  8-class output  │
-     └──────────────────┘
+                               ┌────────────────────────────────┐
+                               │         React Frontend         │
+                               │   (Vite + Tailwind + Recharts)  │
+                               └───────────────┬────────────────┘
+                                               │ (Real-time snapshots)
+                ┌──────────────────────────────┼──────────────────────────────┐
+                │ (User Uploads Audio)         │                              │
+                ▼                              ▼                              ▼
+     ┌──────────────────────┐        ┌──────────────────┐           ┌──────────────────┐
+     │  FastAPI Backend API │        │  Firebase Auth   │           │  Cloud Firestore │
+     │   (localhost:8000)   │        │  (RBAC: Admin /  │           │   (Collections:  │
+     └──────────┬───────────┘        │   Provider)      │           │  patient_feedback,│
+                │                    └──────────────────┘           │    users)        │
+                │                                                   └────────▲─────────┘
+                ├────────────────────────────────────────────────────────────┤
+                │ 1. Transcribe audio (Whisper API)                          │ (Persist results)
+                │ 2. Analyze sentiment & summarize (GPT-4o)                   │
+                │ 3. Save structured feedback record ────────────────────────┘
 ```
+
+> **Fallback Mode (Demo Mode)**: If the FastAPI backend is unreachable or offline, the React client automatically downgrades to **Demo Mode**, performing mock transcription/analysis client-side and writing directly to Firestore to ensure continuous uptime and preview capabilities.
 
 ---
 
 ## Tech Stack
 
 ### Frontend
-| Technology | Version | Purpose |
-|-----------|---------|---------|
-| Vite | 6.3.5 | Build tool & dev server |
-| React | 18.3.1 | UI framework |
-| Tailwind CSS | 4.1.12 | Styling framework |
-| Recharts | 2.15.2 | Visualizing metrics & trends |
-| Lucide React | 0.487.0 | Iconography |
-| Firebase JS SDK | latest | Auth + Firestore real-time data client |
+* **UI & Logic**: React (v18.3.1), Vite (v6.3.5)
+* **Styling**: Tailwind CSS (v4) for transitions, theme customisation, and utility styling
+* **Charts**: Recharts (v2.15.2) — Custom SVG Area charts and Pie breakdowns
+* **Icons**: Lucide React (v0.487.0)
+* **Database Client**: Firebase Web SDK (v11)
 
-### Backend (ML Pipeline)
-| Technology | Purpose |
-|-----------|---------|
-| Python 3.13 | Runtime |
-| PyTorch | 1D-CNN model definition and inference |
-| Librosa | Audio feature extraction (MFCC + ZCR) |
-| FastAPI + Uvicorn | REST API server |
-| NumPy | Numerical feature processing |
+### Backend (Feedback Processing Engine)
+* **Runtime**: Python 3.13
+* **Framework**: FastAPI + Uvicorn
+* **API Orchestration**: OpenAI SDK (Whisper STT + GPT-4o)
+* **Database Write SDK**: Firebase Admin SDK (Python)
+* **Utility**: python-dotenv
 
-### Database & Auth
-| Technology | Purpose |
-|-----------|---------|
-| Firebase Authentication | User login + RBAC |
-| Cloud Firestore | NoSQL real-time database |
-| Firebase Admin SDK | Database seeding and cleanup utilities |
+### Database & Security
+* **Authentication**: Firebase Authentication
+* **Database**: Cloud Firestore NoSQL
 
 ---
 
@@ -110,25 +88,25 @@ These scores (0–100) are saved to Firestore and instantly visualized across th
 ```
 EY Patient Experience/
 │
-├── .env.local                    # Firebase web API keys (gitignored)
+├── .env.local                    # Firebase web client environment variables (gitignored)
 ├── .gitignore
-├── README.md                     # Documentation
+├── README.md                     # Main documentation
 │
-├── from Figma/                   # React frontend app
+├── from Figma/                   # React Frontend App
 │   ├── vite.config.ts
 │   ├── package.json
 │   ├── firestore.rules           # Production security rules
 │   └── src/
-│       ├── main.tsx              # Entry point
+│       ├── main.tsx              # Application entry point
 │       ├── lib/
-│       │   ├── firebase.js       # Firebase initialization
-│       │   └── firestore.js      # Firestore helper methods
+│       │   ├── firebase.js       # Firebase Web SDK initialization
+│       │   └── firestore.js      # Firestore helper methods & references
 │       ├── hooks/
-│       │   └── useFeedbackData.js # Real-time Firestore query listener
+│       │   └── useFeedbackData.js # Real-time query listeners & client filtering
 │       └── app/
-│           ├── App.tsx           # Tab shell, header, and layouts
+│           ├── App.tsx           # Dashboard main structure and tabs shell
 │           ├── contexts/
-│           │   └── AuthContext.jsx  # Auth + RBAC state provider
+│           │   └── AuthContext.jsx  # Authentication state & provider
 │           ├── styles/
 │           │   ├── fonts.css
 │           │   ├── globals.css
@@ -136,72 +114,63 @@ EY Patient Experience/
 │           │   ├── tailwind.css
 │           │   └── theme.css
 │           └── components/
-│               ├── AdminDashboard.tsx       # Main dashboard layout
+│               ├── AdminDashboard.tsx       # Core dashboard panel layout
 │               ├── AudioUploadModal.tsx     # Audio upload & pipeline driver
 │               ├── DoctorProfileModal.tsx   # Detailed doctor statistics view
 │               ├── PatientProfileModal.tsx  # Detailed patient summary view
 │               ├── FeedbackDetailPanel.tsx  # Side panel details card
 │               ├── FeedbackTable.tsx        # Responsive grid data table
 │               ├── FilterBar.tsx            # Sentiment & category drop-down filters
-│               ├── KPIBar.tsx               # Top-level indicators
-│               ├── SentimentTrendChart.tsx  # Trend visualization chart
-│               └── ui/                      # Styled shadcn base components
+│               ├── KPIBar.tsx               # Top-level indicators (Feedbacks, Sentiment, Pain Points)
+│               └── SentimentTrendChart.tsx  # Trend visualization chart
 │
-├── backend/                      # Python ML pipeline
-│   ├── requirements.txt
-│   ├── dataset.py                # RAVDESS Dataset parser (MFCC + ZCR)
-│   ├── model.py                  # EmotionCNN 1D-CNN architecture
-│   ├── train.py                  # PyTorch model training loop
-│   ├── api.py                    # FastAPI server + heuristic mapping
-│   └── best_model.pth            # Trained weights checkpoint (gitignored)
+├── backend/                      # FastAPI Backend Engine
+│   ├── requirements.txt          # Python dependencies
+│   ├── api.py                    # Server endpoints, Whisper & GPT-4o orchestration
+│   └── .env                      # OpenAI API key & Firebase Account path (gitignored)
 │
-└── scripts/                      # Utility scripts
+└── scripts/                      # Utility Database Scripts
     ├── seed_feedback.js          # Firestore database seeder
-    ├── wipe_legacy_firestore.js  # Clean existing collections
+    ├── wipe_legacy_firestore.js  # Clears existing Firestore collections
     ├── package.json
     └── serviceAccountKey.json    # Admin credentials key (gitignored)
 ```
 
 ---
 
-## Phase 1: Acoustic Sentiment Engine (ML Backend)
+## Acoustic & Sentiment Pipeline
 
-### RAVDESS Dataset
-The model is trained on the [Ryerson Audio-Visual Database of Emotional Speech and Song (RAVDESS)](https://zenodo.org/record/1188976), consisting of 1,440 `.wav` files of actors speaking with 8 distinct emotions: 
-`01=neutral, 02=calm, 03=happy, 04=sad, 05=angry, 06=fearful, 07=disgust, 08=surprised`.
+When an audio file is uploaded to the `/process-feedback` endpoint in `backend/api.py`, it passes through a three-stage pipeline:
 
-### Feature Extraction
-Audio files are processed into a `(41, 173)` tensor containing:
-1. **40 Mel-Frequency Cepstral Coefficients (MFCCs)**: capture spectral envelope characteristics.
-2. **1 Zero-Crossing Rate (ZCR)**: captures speech tempo and structural articulation.
-
-### Model Architecture
-The custom PyTorch **EmotionCNN** is a 1D Convolutional Neural Network (112,968 parameters):
+### Speech-to-Text (STT) via Whisper
+The uploaded file (`.wav` or `.mp3`) is processed by OpenAI's Whisper API using the audio transcriptions model:
+```python
+transcription = openai_client.audio.transcriptions.create(
+    model="whisper-1",
+    file=(file.filename, audio_bytes),
+)
 ```
-EmotionCNN
-├── Conv1d(41→64, kernel_size=5) + BatchNorm + ReLU + MaxPool1d(4)
-├── Conv1d(64→128, kernel_size=5) + BatchNorm + ReLU + MaxPool1d(4)
-├── Conv1d(128→128, kernel_size=3) + BatchNorm + ReLU + AdaptiveAvgPool1d(1)
-└── Classifier: Dropout(0.3) → Linear(128→64) → ReLU → Dropout(0.3) → Linear(64→8)
-```
+* **Output**: Plain-text transcript string of the consultation session.
 
-### Heuristic Mapping Layer
-Logits outputted by the model are converted to probabilities and mapped to clinical metrics using standard formulas:
+### Clinical Text Analysis via GPT-4o
+The plain-text transcript is passed to GPT-4o with instructions to analyze and format a JSON response.
+* **System Prompt**:
+  > *You are a clinical database analyst. Analyze the patient feedback transcript. Return a raw JSON object only (no markdown, no preamble) with exactly three keys:*
+  > 1. `'sentiment'`: strictly one of 'Positive', 'Neutral', or 'Negative'.
+  > 2. `'summary'`: 1 to 2 sentences summarizing the feedback (maximum 30 words). Style must be objective, administrative, and clipped. Structure: [Primary Sentiment Driver] + [Specific Incident/Context]. Do NOT use filler phrases like 'The patient stated', 'This feedback highlights', 'The patient felt', or 'Overall'.
+  > 3. `'pain_points'`: an array of short strings representing specific complaints mentioned, empty if none.
 
-* **Empathy** (Attunement level):
-  $$\text{Empathy} = 50 + 30 \times (P_{\text{calm}} + P_{\text{happy}}) + 10 \times P_{\text{neutral}} - 35 \times P_{\text{angry}} - 25 \times P_{\text{fearful}} - 15 \times P_{\text{disgust}}$$
-* **Clarity** (Tempo & articulation quality):
-  $$\text{Clarity} = \text{Gaussian}(ZCR, \text{target}=0.06) - 15 \times (P_{\text{angry}} + P_{\text{fearful}})$$
-* **Efficiency** (Balance of constructive communication vs tension):
-  $$\text{Efficiency} = 55 + 25 \times (P_{\text{calm}} + P_{\text{neutral}} + P_{\text{happy}}) - 40 \times (P_{\text{angry}} + P_{\text{fearful}} + P_{\text{disgust}} + P_{\text{sad}}) + 15 \times \text{TempoBonus}$$
+### Database Persistence
+If the Firebase Admin SDK is initialized on the backend, the structured output is stored directly in Cloud Firestore.
 
 ---
 
-## Phase 2: Firebase Backend
+## Firebase & Firestore Database Architecture
 
 ### Firestore Collections
 
 #### `users`
+Tracks administrator and clinician user credentials and authorization roles.
 ```json
 {
   "uid": "firebase_auth_uid",
@@ -212,75 +181,40 @@ Logits outputted by the model are converted to probabilities and mapped to clini
 }
 ```
 
-#### `providers`
+#### `patient_feedback`
+Contains transcripts, summaries, sentiment labels, tags, and physician assignments.
 ```json
 {
-  "name": "Dr. Aarav Patel",
-  "specialty": "Cardiology",
-  "avgEmpathy": 88,
-  "avgClarity": 82,
-  "avgEfficiency": 75,
-  "joinedYear": 2019
-}
-```
-
-#### `consultations`
-```json
-{
+  "feedback_id": "FB-XXXXXX",
   "timestamp": "Firestore Timestamp",
-  "provider_id": "dr-patel",
-  "doctorName": "Dr. Aarav Patel",
-  "patientName": "Amit Sharma",
-  "sentiment": "Positive | Neutral | Negative",
-  "patient_anxiety_flag": false,
-  "summary": "AI summary text mapping key findings...",
+  "patient_name": "Amit Sharma",
+  "doctor_id": "Dr. Aarav Patel",
+  "department": "Cardiology",
   "transcript": "Full consultation text log...",
-  "metrics": {
-    "Empathy": 88,
-    "Clarity": 82,
-    "Efficiency": 75
-  },
-  "tags": ["Wait Time", "Clear Explanations"]
+  "sentiment": "Positive | Neutral | Negative",
+  "summary": "AI summary text mapping key findings...",
+  "pain_points": ["Wait Time", "Billing Errors"]
 }
 ```
 
 ### Role-Based Access Control (RBAC)
-
-| Role | Access |
-|------|--------|
-| **Admin** | Unrestricted read/write access to all views, tables, and statistics. |
-| **Provider** | Access restricted to consultation logs matching their `provider_id`. |
+* **Admin**: Authorized to read all feedback logs, view charts, and perform upload simulations.
+* **Provider**: Authorized to view feedback logs associated strictly with their `provider_id`.
 
 ---
 
-## Phase 3: Frontend Integration
+## Frontend Real-time Query Architecture
 
-The `AudioUploadModal.tsx` component orchestrates the client-side pipeline:
+### Client-Side In-Memory Filtering
+To avoid requiring composite indexes in Cloud Firestore for complex multi-field filter combinations, the frontend queries all feedbacks sorted by a single field (timestamp) using a real-time Firestore `onSnapshot` listener in `useFeedbackData.js`. 
 
-```
-User selects .wav file
-    → FormData → POST http://localhost:8000/analyze-audio
-    → { Empathy, Clarity, Efficiency }
-    → addDoc(consultations, { timestamp: serverTimestamp(), provider_id, metrics })
-    → Success state callback
-```
+Subsequent filtering (by Date Range, Sentiment, Department, Doctor, or Patient Search Queries) is performed **in-memory** on the client, ensuring snappy response rates and simple database requirements.
 
-Error handling handles the following states:
-* Backend server offline (`TypeError: fetch`)
-* Firebase database permission issues (`permission-denied`)
-* File formatting errors (non-wav file selection)
-
----
-
-## Phase 4: Live Dashboard
-
-### Real-time Data Hooks (`useFeedbackData.js`)
-Frontend tables and charts query Firestore dynamically using the `onSnapshot` listener. Whenever new recordings are processed and added, dashboard components refresh instantly.
-
-* `useFeedbackData` hook accepts active filters (date ranges, specialties, doctors, sentiment bounds) and updates data collections automatically.
-
-### Loading States
-Custom skeletons (`Skeleton` component) display loading blocks during active Firestore queries to prevent layout shifts.
+### Derived Metric Computations
+The `useFeedbackData.js` hook calculates the following properties dynamically:
+* **Sentiment Breakdown**: Calculates absolute volumes and rounded percentage values for positive, neutral, and negative logs to feed the donut chart.
+* **Trending Pain Points**: Collects all strings in `pain_points` arrays, aggregates occurrences, and outputs a sorted array of objects (descending by frequency).
+* **Unique Doctors / Departments**: Collects valid entries from the currently synced collection to dynamically populate dashboard filter dropdown elements.
 
 ---
 
@@ -289,7 +223,7 @@ Custom skeletons (`Skeleton` component) display loading blocks during active Fir
 ### Prerequisites
 * Node.js 18+
 * Python 3.10+
-* Firebase project with Firestore and Auth services enabled
+* Firebase Project with Firestore and Auth services enabled
 
 ### 1. Set Up the Project
 ```bash
@@ -298,21 +232,21 @@ cd PX-Analytics
 ```
 
 ### 2. Configure Environment Variables
-Create `.env.local` in the project root (see [Environment Variables](#environment-variables) section below).
+* Configure the frontend env variables inside `from Figma/.env.local`.
+* Configure the backend env variables inside `backend/.env`.
 
-### 3. Install & Run ML Backend
+### 3. Install & Start Backend API
 ```powershell
 cd backend
 pip install -r requirements.txt
-python train.py      # Trains model weights file
-python api.py        # Starts FastAPI local endpoint
+python api.py        # Starts FastAPI server at http://localhost:8000
 ```
 
 ### 4. Install & Launch Frontend App
 ```powershell
 cd "../from Figma"
 npm install
-npm run dev          # Starts development server
+npm run dev          # Starts Vite development server
 ```
 
 Open `http://localhost:5173`.
@@ -321,43 +255,41 @@ Open `http://localhost:5173`.
 
 ## Environment Variables
 
-Configure the following variables inside `.env.local` in the project root:
-
+### Frontend (`from Figma/.env.local`)
 ```env
-VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_API_KEY=your_firebase_web_api_key
 VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=your_project_id
 VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
-VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
+VITE_FIREBASE_MEASUREMENT_ID=your_google_analytics_id
 ```
 
-> ⚠️ Do not commit `.env.local` to remote repositories.
+### Backend (`backend/.env`)
+```env
+OPENAI_API_KEY=your_openai_api_key
+FIREBASE_SERVICE_ACCOUNT_PATH=path/to/serviceAccountKey.json
+```
 
 ---
 
-## Security
-
-### Gitignored Files
-The following configuration and binary files are gitignored for security:
-* `.env.local` (Firebase private client configuration)
-* `scripts/serviceAccountKey.json` (Firebase Admin SDK private key)
-* `backend/best_model.pth` (Trained model weights checkpoint)
+## Security & Rule Configurations
 
 ### Firestore Security Rules
-Production rules (`from Figma/firestore.rules`):
+Applied inside `from Figma/firestore.rules`:
 ```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /consultations/{consultationId} {
-      allow read: if request.auth != null && (
-        resource.data.provider_id == request.auth.token.provider_id ||
-        request.auth.token.role == 'admin'
-      );
-      allow create: if request.auth != null;
-      allow update, delete: if false;
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin" ||
+         !exists(/databases/$(database)/documents/users/$(request.auth.uid)));
+    }
+    match /patient_feedback/{feedbackId} {
+      allow read, write: if request.auth != null;
     }
   }
 }
