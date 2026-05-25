@@ -45,12 +45,12 @@ const DOCTOR_DEPARTMENT_MAP = {
 
 // 30 unique patient names
 const PATIENT_NAMES = [
-  "John Doe", "Maria Garcia", "James Wilson", "Priya Kapoor", "Michael Brown",
-  "Sarah Mitchell", "David Nguyen", "Emily Carter", "Robert Singh", "Jessica Lee",
-  "Daniel Thompson", "Rachel Adams", "Kevin O'Brien", "Samantha Cruz", "Thomas Park",
-  "Angela Rivera", "Christopher Hall", "Megan Foster", "Andrew Reyes", "Laura Chen",
-  "Nathan Brooks", "Olivia Turner", "William Davis", "Hannah Scott", "Brian Martinez",
-  "Stephanie Moore", "Jason Kim", "Rebecca Lewis", "Patrick Sullivan", "Diana Flores",
+  "Ishaan Verma", "Meera Nair", "Arjun Malhotra", "Priya Kapoor", "Madhav Joshi",
+  "Sneha Gupta", "Devendra Rao", "Ekta Choudhury", "Rohan Singh", "Jyoti Iyer",
+  "Deepak Kumar", "Ritu Saxena", "Kabir Sen", "Sandhya Reddy", "Tarun Das",
+  "Aditi Rao", "Chirag Vyas", "Meenakshi Pillai", "Aditya Deshmukh", "Lalita Murthy",
+  "Nikhil Bose", "Ojasvi Anand", "Varun Trivedi", "Harini Iyer", "Balaji Ramakrishnan",
+  "Shweta Mukherjee", "Jaideep Bose", "Rupa Ganguly", "Parth Solanki", "Divya Hegde",
 ];
 
 // ─── All 50 Feedback Records (Hardcoded) ─────────────────────────────────────
@@ -63,7 +63,7 @@ const FEEDBACK_DATA = [
   // ═══════════════════════════════════════════════════════════════════════════
   {
     feedback_id: "FB-1001",
-    patient_name: "John Doe",
+    patient_name: "Ishaan Verma",
     doctor_id: "Dr. Sharma",
     department: "Cardiology",
     transcript: "Dr. Sharma was incredibly thorough during my consultation. She explained every step of my cardiac evaluation and made sure I understood my medication schedule before leaving. The nursing staff was also very attentive throughout my visit.",
@@ -73,7 +73,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1002",
-    patient_name: "Maria Garcia",
+    patient_name: "Meera Nair",
     doctor_id: "Dr. Rodriguez",
     department: "Pediatrics",
     transcript: "The pediatrics team was wonderful with my daughter. Dr. Rodriguez made her feel comfortable and even used stuffed animals to explain the procedure. The nurses kept checking on us regularly, which really eased my anxiety as a parent.",
@@ -83,7 +83,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1003",
-    patient_name: "James Wilson",
+    patient_name: "Arjun Malhotra",
     doctor_id: "Dr. Patel",
     department: "Cardiology",
     transcript: "Everything about my experience was great. Short wait times, friendly staff, and Dr. Patel gave me a clear follow-up plan for managing my blood pressure. I felt like my concerns were genuinely heard.",
@@ -103,7 +103,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1005",
-    patient_name: "Michael Brown",
+    patient_name: "Madhav Joshi",
     doctor_id: "Dr. Johnson",
     department: "Orthopedics",
     transcript: "My knee replacement follow-up went smoothly. Dr. Johnson checked the healing progress carefully and adjusted my physical therapy plan. The front desk was also helpful with scheduling my next three appointments in one go.",
@@ -113,7 +113,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1006",
-    patient_name: "Sarah Mitchell",
+    patient_name: "Sneha Gupta",
     doctor_id: "Dr. Nakamura",
     department: "Oncology",
     transcript: "Going through chemotherapy is terrifying, but Dr. Nakamura and the oncology nurses made me feel supported every step of the way. They answered all of my questions patiently and checked in on me emotionally, not just physically.",
@@ -123,7 +123,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1007",
-    patient_name: "David Nguyen",
+    patient_name: "Devendra Rao",
     doctor_id: "Dr. Williams",
     department: "Neurology",
     transcript: "Dr. Williams was fantastic during my neurology consultation. He listened carefully to my description of symptoms and ordered the right tests without making me feel like a number. The entire experience was professional and compassionate.",
@@ -133,7 +133,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1008",
-    patient_name: "Emily Carter",
+    patient_name: "Ekta Choudhury",
     doctor_id: "Dr. Kim",
     department: "Pediatrics",
     transcript: "Dr. Kim was amazing with my son who has severe needle anxiety. She spent extra time calming him down and used a numbing cream before the injection. My son actually said he wants to come back, which has never happened before!",
@@ -143,7 +143,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1009",
-    patient_name: "Robert Singh",
+    patient_name: "Rohan Singh",
     doctor_id: "Dr. Sharma",
     department: "Cardiology",
     transcript: "I came in for a stress test and the whole process was well-organized. Dr. Sharma explained what to expect at each stage and the technicians were skilled and reassuring. Got my results explained clearly the same day.",
@@ -153,7 +153,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1010",
-    patient_name: "Jessica Lee",
+    patient_name: "Jyoti Iyer",
     doctor_id: "Dr. Nakamura",
     department: "Oncology",
     transcript: "Dr. Nakamura sat with me for over thirty minutes to discuss treatment options and their side effects. He made sure I understood the pros and cons of each approach and respected my wish to take a day to decide. I never felt pressured.",
@@ -163,7 +163,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1011",
-    patient_name: "Daniel Thompson",
+    patient_name: "Deepak Kumar",
     doctor_id: "Dr. Patel",
     department: "Cardiology",
     transcript: "Had an echocardiogram today and Dr. Patel walked me through the entire process beforehand. The waiting room was clean and comfortable, and I was seen within ten minutes of my appointment time. Really impressed with the efficiency.",
@@ -173,7 +173,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1012",
-    patient_name: "Rachel Adams",
+    patient_name: "Ritu Saxena",
     doctor_id: "Dr. Rodriguez",
     department: "Pediatrics",
     transcript: "Brought my twins in for their vaccinations and Dr. Rodriguez handled both of them brilliantly. She was gentle, quick, and even gave them stickers and juice boxes afterwards. The whole visit took less than 30 minutes.",
@@ -183,7 +183,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1013",
-    patient_name: "Kevin O'Brien",
+    patient_name: "Kabir Sen",
     doctor_id: "Dr. Johnson",
     department: "Orthopedics",
     transcript: "After my shoulder surgery, Dr. Johnson's rehabilitation plan has been spot-on. Every follow-up visit feels thorough and I can clearly see the progress. The physical therapy team he recommended is also outstanding.",
@@ -193,7 +193,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1014",
-    patient_name: "Samantha Cruz",
+    patient_name: "Sandhya Reddy",
     doctor_id: "Dr. Chen",
     department: "Neurology",
     transcript: "I've been dealing with chronic migraines for years and Dr. Chen is the first neurologist who actually listened to my full history. She adjusted my medication and suggested lifestyle changes that have already started helping. Finally feel hopeful.",
@@ -203,7 +203,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1015",
-    patient_name: "Thomas Park",
+    patient_name: "Tarun Das",
     doctor_id: "Dr. Kim",
     department: "Pediatrics",
     transcript: "Dr. Kim was very thorough during my daughter's annual checkup. She caught a minor issue with her vision that we hadn't noticed and referred us to a specialist right away. Very grateful for her attention to detail.",
@@ -213,7 +213,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1016",
-    patient_name: "Angela Rivera",
+    patient_name: "Aditi Rao",
     doctor_id: "Dr. Williams",
     department: "Neurology",
     transcript: "The neurology department is run like clockwork. I arrived, checked in quickly, and Dr. Williams was ready for me almost immediately. His bedside manner is warm and he explained my EEG results with great clarity.",
@@ -223,7 +223,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1017",
-    patient_name: "Christopher Hall",
+    patient_name: "Chirag Vyas",
     doctor_id: "Dr. Sharma",
     department: "Cardiology",
     transcript: "Dr. Sharma genuinely cares about her patients. She remembered details from my last visit and asked about my exercise routine. The cardiac rehab program she recommended has made a real difference in my daily energy levels.",
@@ -233,7 +233,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1018",
-    patient_name: "Megan Foster",
+    patient_name: "Meenakshi Pillai",
     doctor_id: "Dr. Nakamura",
     department: "Oncology",
     transcript: "The infusion center staff made my treatment session as comfortable as possible. Warm blankets, regular check-ins, and Dr. Nakamura stopped by personally to see how I was doing. It's the little things that matter most during cancer treatment.",
@@ -243,7 +243,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1019",
-    patient_name: "Andrew Reyes",
+    patient_name: "Aditya Deshmukh",
     doctor_id: "Dr. Johnson",
     department: "Orthopedics",
     transcript: "Came in with severe back pain and Dr. Johnson diagnosed the issue quickly. He was honest about the recovery timeline and didn't oversell the treatment. I appreciate doctors who set realistic expectations rather than making empty promises.",
@@ -253,7 +253,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1020",
-    patient_name: "Laura Chen",
+    patient_name: "Lalita Murthy",
     doctor_id: "Dr. Patel",
     department: "Cardiology",
     transcript: "I was nervous about my heart catheterization, but Dr. Patel took time before the procedure to walk me through every step. The post-procedure care was excellent too — the nurses made sure I was comfortable and monitored closely.",
@@ -263,7 +263,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1021",
-    patient_name: "Nathan Brooks",
+    patient_name: "Nikhil Bose",
     doctor_id: "Dr. Rodriguez",
     department: "Pediatrics",
     transcript: "Dr. Rodriguez is our family's pediatrician and we wouldn't go anywhere else. She knows our kids by name, remembers their medical history, and always makes time for our questions. The receptionist team is also wonderfully friendly.",
@@ -273,7 +273,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1022",
-    patient_name: "Olivia Turner",
+    patient_name: "Ojasvi Anand",
     doctor_id: "Dr. Chen",
     department: "Neurology",
     transcript: "After my MS diagnosis, Dr. Chen has been my rock. She stays updated on the latest research and discusses new treatment options with me proactively. I never feel like just another patient — she treats me as a partner in my care.",
@@ -283,7 +283,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1023",
-    patient_name: "William Davis",
+    patient_name: "Varun Trivedi",
     doctor_id: "Dr. Kim",
     department: "Pediatrics",
     transcript: "Brought my newborn in for her first well-baby visit. Dr. Kim was incredibly gentle and patient, explaining every developmental milestone we should watch for. She also took time to address my wife's breastfeeding concerns.",
@@ -293,7 +293,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1024",
-    patient_name: "Hannah Scott",
+    patient_name: "Harini Iyer",
     doctor_id: "Dr. Sharma",
     department: "Cardiology",
     transcript: "I had a cardiac scare and was rushed to the ER. Dr. Sharma arrived quickly and her calm, confident manner immediately put me at ease. The follow-up plan she created was detailed and she made sure I had her nurse's direct line for questions.",
@@ -303,7 +303,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1025",
-    patient_name: "Brian Martinez",
+    patient_name: "Balaji Ramakrishnan",
     doctor_id: "Dr. Williams",
     department: "Neurology",
     transcript: "Dr. Williams detected early signs of peripheral neuropathy that my previous doctor missed. He explained the condition clearly and started me on a treatment plan immediately. I'm grateful he caught it early.",
@@ -313,7 +313,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1026",
-    patient_name: "Stephanie Moore",
+    patient_name: "Shweta Mukherjee",
     doctor_id: "Dr. Johnson",
     department: "Orthopedics",
     transcript: "The cast removal process was quick and painless. Dr. Johnson checked the healed fracture with an X-ray and was pleased with the result. He gave me clear instructions on gradually returning to my normal activities.",
@@ -323,7 +323,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1027",
-    patient_name: "Jason Kim",
+    patient_name: "Jaideep Bose",
     doctor_id: "Dr. Nakamura",
     department: "Oncology",
     transcript: "Dr. Nakamura delivered difficult news with remarkable sensitivity. He gave us time to process, answered every question we had, and connected us with the hospital's counseling service. His empathy during such a hard time meant the world to our family.",
@@ -333,7 +333,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1028",
-    patient_name: "Rebecca Lewis",
+    patient_name: "Rupa Ganguly",
     doctor_id: "Dr. Patel",
     department: "Cardiology",
     transcript: "My annual cardiac checkup with Dr. Patel was thorough as always. He reviewed my cholesterol levels, adjusted one of my medications, and reminded me about dietary changes. The lab work was processed quickly and results shared the same day.",
@@ -347,7 +347,7 @@ const FEEDBACK_DATA = [
   // ═══════════════════════════════════════════════════════════════════════════
   {
     feedback_id: "FB-1029",
-    patient_name: "Patrick Sullivan",
+    patient_name: "Parth Solanki",
     doctor_id: "Dr. Chen",
     department: "Neurology",
     transcript: "My appointment went fine. Dr. Chen was professional but seemed a bit rushed during the consultation. The waiting room could use more comfortable seating, but overall no major complaints.",
@@ -357,7 +357,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1030",
-    patient_name: "Diana Flores",
+    patient_name: "Divya Hegde",
     doctor_id: "Dr. Sharma",
     department: "Cardiology",
     transcript: "Treatment was adequate and the results were explained clearly enough. I wish I had more time to ask questions during the consultation, but Dr. Sharma did cover the essentials.",
@@ -367,7 +367,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1031",
-    patient_name: "John Doe",
+    patient_name: "Ishaan Verma",
     doctor_id: "Dr. Johnson",
     department: "Orthopedics",
     transcript: "The medical care was solid but the parking situation at the hospital is really frustrating. I circled the lot for 20 minutes before finding a spot. The appointment itself was fine once I got inside.",
@@ -377,7 +377,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1032",
-    patient_name: "Maria Garcia",
+    patient_name: "Meera Nair",
     doctor_id: "Dr. Kim",
     department: "Pediatrics",
     transcript: "Dr. Kim was good with my child but the appointment ran about 40 minutes late. I understand doctors get behind schedule, but some communication about the delay would have been appreciated.",
@@ -387,7 +387,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1033",
-    patient_name: "James Wilson",
+    patient_name: "Arjun Malhotra",
     doctor_id: "Dr. Nakamura",
     department: "Oncology",
     transcript: "The oncology department is very professional and the medical care is excellent. However, the ward was quite noisy during my treatment session — other patients' visitors were talking loudly and it was hard to rest.",
@@ -407,7 +407,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1035",
-    patient_name: "Michael Brown",
+    patient_name: "Madhav Joshi",
     doctor_id: "Dr. Rodriguez",
     department: "Pediatrics",
     transcript: "Decent visit overall. Dr. Rodriguez was friendly and the checkup was thorough. The only issue was that the hospital food in the cafeteria was quite bland — my son refused to eat it while we waited.",
@@ -417,7 +417,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1036",
-    patient_name: "Emily Carter",
+    patient_name: "Ekta Choudhury",
     doctor_id: "Dr. Patel",
     department: "Cardiology",
     transcript: "The check-in process was smooth and the nurses were helpful. Dr. Patel seemed competent but I felt like the consultation was a bit surface-level. I left with some unanswered questions about my long-term cardiac health.",
@@ -427,7 +427,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1037",
-    patient_name: "David Nguyen",
+    patient_name: "Devendra Rao",
     doctor_id: "Dr. Johnson",
     department: "Orthopedics",
     transcript: "Dr. Johnson did a good job with my wrist examination. The X-ray technician was professional too. My only gripe is the uncomfortable chairs in the waiting area — not ideal when you're already in pain.",
@@ -437,7 +437,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1038",
-    patient_name: "Robert Singh",
+    patient_name: "Rohan Singh",
     doctor_id: "Dr. Chen",
     department: "Neurology",
     transcript: "Had a routine follow-up for my epilepsy medication. Dr. Chen reviewed everything and kept my current prescription. The visit itself was uneventful, which I suppose is a good thing. Nothing exceptional to report either way.",
@@ -447,7 +447,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1039",
-    patient_name: "Jessica Lee",
+    patient_name: "Jyoti Iyer",
     doctor_id: "Dr. Sharma",
     department: "Cardiology",
     transcript: "I had trouble scheduling this appointment — the online system kept glitching and I had to call in three times. Once I actually got to the appointment, Dr. Sharma was great, but the scheduling process needs work.",
@@ -457,7 +457,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1040",
-    patient_name: "Daniel Thompson",
+    patient_name: "Deepak Kumar",
     doctor_id: "Dr. Nakamura",
     department: "Oncology",
     transcript: "The medical care at the oncology department is top-notch but the hospital could do better with staff availability at the reception. I stood waiting for five minutes before anyone acknowledged me.",
@@ -471,7 +471,7 @@ const FEEDBACK_DATA = [
   // ═══════════════════════════════════════════════════════════════════════════
   {
     feedback_id: "FB-1041",
-    patient_name: "Rachel Adams",
+    patient_name: "Ritu Saxena",
     doctor_id: "Dr. Sharma",
     department: "Cardiology",
     transcript: "I waited over three hours past my scheduled appointment time. When I finally saw the doctor, the consultation lasted barely five minutes. Very disappointing, especially given how serious cardiac issues are.",
@@ -481,7 +481,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1042",
-    patient_name: "Kevin O'Brien",
+    patient_name: "Kabir Sen",
     doctor_id: "Dr. Williams",
     department: "Neurology",
     transcript: "The billing department lost my insurance information twice. I had to call back four times over two weeks to get it resolved. The medical care from Dr. Williams was fine, but the administrative side is absolutely terrible.",
@@ -491,7 +491,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1043",
-    patient_name: "Samantha Cruz",
+    patient_name: "Sandhya Reddy",
     doctor_id: "Dr. Rodriguez",
     department: "Pediatrics",
     transcript: "My discharge paperwork had errors in the medication dosage for my child. If I hadn't double-checked, my daughter could have received the wrong amount. This is unacceptable, especially in a pediatric setting where dosing precision is critical.",
@@ -501,7 +501,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1044",
-    patient_name: "Thomas Park",
+    patient_name: "Tarun Das",
     doctor_id: "Dr. Johnson",
     department: "Orthopedics",
     transcript: "The nurses were great, but it took four hours to get my discharge paperwork after my procedure. I was ready to leave by noon but didn't get out until almost 4 PM. The wait was exhausting and completely unnecessary.",
@@ -511,7 +511,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1045",
-    patient_name: "Angela Rivera",
+    patient_name: "Aditi Rao",
     doctor_id: "Dr. Patel",
     department: "Cardiology",
     transcript: "Dr. Patel barely made eye contact during my entire visit. He typed on his computer the whole time and didn't ask about how I was feeling emotionally about my diagnosis. I left feeling like a chart number, not a person.",
@@ -521,7 +521,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1046",
-    patient_name: "Christopher Hall",
+    patient_name: "Chirag Vyas",
     doctor_id: "Dr. Chen",
     department: "Neurology",
     transcript: "My medication was changed last visit but nobody explained the potential side effects properly. I experienced severe dizziness for two weeks before I called back and learned it was a common reaction they should have warned me about.",
@@ -531,7 +531,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1047",
-    patient_name: "Megan Foster",
+    patient_name: "Meenakshi Pillai",
     doctor_id: "Dr. Kim",
     department: "Pediatrics",
     transcript: "Tried to schedule a follow-up for my son and was told the earliest available slot was six weeks out. When I explained it was urgent, the receptionist was dismissive and said there was nothing she could do. Ended up going to another hospital.",
@@ -541,7 +541,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1048",
-    patient_name: "Andrew Reyes",
+    patient_name: "Aditya Deshmukh",
     doctor_id: "Dr. Nakamura",
     department: "Oncology",
     transcript: "The treatment itself was fine, but the communication between departments is broken. My oncologist ordered labs that the lab said they never received. I was bounced between three departments for an hour trying to sort it out. Exhausting.",
@@ -551,7 +551,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1049",
-    patient_name: "Laura Chen",
+    patient_name: "Lalita Murthy",
     doctor_id: "Dr. Williams",
     department: "Neurology",
     transcript: "I was told to arrive 30 minutes early to fill out paperwork, which I did. Then I still waited over two hours past my scheduled time. There were not enough staff at the front desk and nobody apologized for the delay. I felt completely disrespected.",
@@ -561,7 +561,7 @@ const FEEDBACK_DATA = [
   },
   {
     feedback_id: "FB-1050",
-    patient_name: "Nathan Brooks",
+    patient_name: "Nikhil Bose",
     doctor_id: "Dr. Johnson",
     department: "Orthopedics",
     transcript: "The follow-up after my surgery was practically nonexistent. I was discharged with a generic instruction sheet and no one called to check how I was recovering. When I called with concerns about swelling, I was put on hold for 45 minutes.",
